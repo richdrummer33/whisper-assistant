@@ -8,7 +8,7 @@ It also can act as an assistant when you start by saying "snoop" after activatin
 
 This is forked from https://github.com/dynamiccreator/whisper-typer-tool.
 
-Note: Check the gpt model in the code where it senfs the api request. E.g. gpt-4. At the time of writing, not everyone has access to gpt4 (tradeoff: gpt4 is slower).
+Note: Check the gpt model in the code where it sends the api request. E.g. gpt-4. At the time of writing, not everyone has access to gpt4 (tradeoff: gpt4 is slower).
 
 
 # Setup Instructions
