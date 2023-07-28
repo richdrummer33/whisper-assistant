@@ -30,11 +30,11 @@ Download and Install ffmpeg, git and python3
 
 Set up your openai api key and organization in environment variables as follows:
 
-1. Search for "Environment Variables" in the start menu and click on "Edit the system environment variables".
-2. Click on "Environment Variables...".
-3. Click on "New..." under the "User variables" section.
-4. Enter "OPENAI_API_KEY" for the variable name and your OpenAI API key for the variable value.
-5. Click "OK" on all windows to close them.
+- Search for "Environment Variables" in the start menu and click on "Edit the system environment variables".
+- Click on "Environment Variables...".
+- Click on "New..." under the "User variables" section.
+- Enter "OPENAI_API_KEY" for the variable name and your OpenAI API key for the variable value.
+- Click "OK" on all windows to close them.
    API key can be found/made here: https://platform.openai.com/account/api-keys
    organization (org) can be found here: https://platform.openai.com/account/org-settings
 
