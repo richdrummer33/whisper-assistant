@@ -37,6 +37,7 @@ Set up your openai api key and organization in environment variables as follows:
 - Click "OK" on all windows to close them.
 
 API key(s) can be found/made here: https://platform.openai.com/account/api-keys
+
 Your organization (org) can be found here: https://platform.openai.com/account/org-settings
 
 **Step 4:**
