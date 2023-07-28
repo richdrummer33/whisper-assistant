@@ -1,6 +1,11 @@
-# whisper-typer-tool
+# whisper-assistant
+
 This is a python script using [openai/whisper](https://github.com/openai/whisper) to type with your voice.
 After you start the script you just press **F2** to start/stop recording. After the record is finsihed, it will type what you said starting at the current cursor position in any editor,input field etc.
+
+# FYI
+
+I have made the assistant snoop dogg. You can change the prompt to be whomever you like, and give it personality as you like (or lack thereof).
 
 # Setup Instructions
 
@@ -23,5 +28,17 @@ Download and Install ffmpeg, git and python3
     pip install -r requirements.txt
 
 **Step 3:**
+
+Set up your openai api key and organization in environment variables as follows:
+
+1. Search for "Environment Variables" in the start menu and click on "Edit the system environment variables".
+2. Click on "Environment Variables...".
+3. Click on "New..." under the "User variables" section.
+4. Enter "OPENAI_API_KEY" for the variable name and your OpenAI API key for the variable value.
+5. Click "OK" on all windows to close them.
+   API key can be found/made here: https://platform.openai.com/account/api-keys
+   organization (org) can be found here: https://platform.openai.com/account/org-settings
+
+**Step 4:**
 
     python3 whisper-typer-tool.py
