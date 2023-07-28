@@ -48,5 +48,5 @@ Your organization (org) can be found here: https://platform.openai.com/account/o
 **Step 4:**
 
     python3 whisper-assistant.py
-    or 
-    run this: _run-whisper-assistant.bat
+    
+or, run this: _run-whisper-assistant.bat
