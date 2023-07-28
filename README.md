@@ -2,9 +2,9 @@
 
 This is a python script using [openai/whisper](https://github.com/openai/whisper) to type with your voice. This is forked from https://github.com/dynamiccreator/whisper-typer-tool.
 
-It also can act as an assistant when you start by saying "snoop" after activating the mic listener. The assistant currently has snoop dogg persona, which you can change. 
+After you start the script you just press **alt-M** to start/stop thr listener. After the record is finsihed, it will type what you said starting at the current cursor position in any editor,input field etc.
 
-After you start the script you just press **F2** to start/stop recording. After the record is finsihed, it will type what you said starting at the current cursor position in any editor,input field etc.
+It also can act as an assistant when you start by saying "snoop" after activating the mic listener. The assistant currently has snoop dogg persona, which you can change. 
 
 # Setup Instructions
 
@@ -40,7 +40,7 @@ Set up your openai api key and organization in environment variables as follows:
 
 **Step 4:**
 
-    python3 whisper-typer-tool.py
+    python3 whisper-assistant.py
     or 
     run this: _run-whisper-assistant.bat
 
