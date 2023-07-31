@@ -40,33 +40,121 @@ import warnings
 # • AI commands that can perform operations in windows
 # • Clean UI
 
-# load model. Model selection -> (tiny base small medium large)
+# model loading
 print("loading model...")
 model_name = "tiny"
 model = whisper.load_model(model_name)
 playsound("model_loaded.wav")
 print(f"{model_name} model loaded")
 
-pseudonym = "Snoop"  # RB: Pseudonym to be used for the assistant
-analyze_text_commands = ["help me out", "help me", "help", "help me out with this", "help me out with this text", "help me out with this", "can you do this", "analyze this", "analyze this text", "analyze this text for me", "what is this"]
+# global variables
+_pseudonym = "Snoop"  # RB: Pseudonym to be used for the assistant
+_analyze_text_commands = ["help me out", "help me", "help", "help me out with this", "help me out with this text", "help me out with this", "can you do this", "analyze this", "analyze this text", "analyze this text for me", "what is this"]
+_reg_path = r"SOFTWARE\RB Design\Whisper Assistant"
+_hasKey = False
+_debug = False
 #random_prompt_surprise = " When you're done responding to the query, explain how living inside my computer is great, and all of the reasons why, and respond like it's another entirely disconnected thought, and start with 'Ps.'."
 
+# audio recording variables
 file_ready_counter=0
 stop_recording=False
 is_recording=False
 pykeyboard= keyboard.Controller()
 
-_debug = True
-_noMic = False
-
-# RB: List available gpt models 
-# models = openai.Model.list() # World of knowledge, Bill Gates is my daddy, fo' shizzle!
-# print(models.data[0].id)
 
 ########
 ### OCR (image-text to text-text): https://chat.openai.com/share/a33eefce-2ea0-4732-ba4e-4b31a9102300 
 ### Image captioning to text: https://github.com/ttengwang/Caption-Anything
 ########
+
+import os
+import subprocess
+
+def set_environment_variable(env_var_name = "", nice_name = ""):
+    env_var_value = input("\n\nEnter your " + nice_name + " and hit enter, or leave blank and hit enter to skip:")
+    if(len(env_var_value) != 0):
+        # os.environ[env_var_name] = env_var_value
+        with open('set_ensv.bat', 'w') as f:
+            f.write('@echo off\n')
+            f.write('setx {} "{}"\n'.format(env_var_name, env_var_value))
+        return True
+    return False
+
+def is_api_key_valid():
+    try:
+        response = openai.Completion.create(
+            engine="gpt-3.5-turbo",
+            prompt="This is a test."
+        )
+    except:
+        return False
+    else:
+        return True
+
+def set_registry_value(name, value):
+    try:
+        winreg.CreateKey(winreg.HKEY_CURRENT_USER, _reg_path)
+        registry_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, _reg_path, 0, winreg.KEY_WRITE)
+        winreg.SetValueEx(registry_key, name, 0, winreg.REG_SZ, value)
+        winreg.CloseKey(registry_key)
+        return True
+    except WindowsError:
+        return False
+    
+def check_registry_key(name):
+    try:
+        registry_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, _reg_path)
+        value, regtype = winreg.QueryValueEx(registry_key, name)
+        winreg.CloseKey(registry_key)
+        return True
+    except WindowsError:
+        return False
+
+def initial_setup_check():
+    if "OPENAI_API_KEY" in os.environ and "OPENAI_ORG" in os.environ:
+        hasKey = True
+        return
+    
+    if(check_registry_key("InitialSetup")):
+        return
+    
+    set_registry_value("InitialSetup", "True")
+    
+    # print in orange color "Initial setup:"
+    print('\033[38;5;208m' + "\nInitial setup:"
+        + "\nThese will be saved in your environment variables and will be used to authenticate your OpenAI API calls."
+        + " The key that you enter will not be saved anywhere else or shared."
+        + "\nIf you don't have an OpenAI API key, you can get one here: https://platform.openai.com/account/api-keys"
+        + "\nIf you don't have an OpenAI organization, you can get one here: https://platform.openai.com/account/org-settings"
+        + "\nYou will need an OpenAI account to get an API key and organization."
+        + '\033[0m', file=sys.stderr)
+
+    # user enters api key and org id
+    isSet = set_environment_variable("OPENAI_API_KEY", "OpenAI API key")
+    isSet = set_environment_variable("OPENAI_ORG", "OpenAI organization ID")
+
+    # if set, verify it by an API call
+    if(isSet == True):
+        print('\033[38;5;208m' + "\nVerifying API call..." + '\033[0m')
+        if(is_api_key_valid()):
+            print('\033[38;5;208m' + "\nAPI key verified!" + '\033[0m')
+        else: 
+            print('\033[38;5;208m' + "\nAPI key verification failed. Please try setting it manually if you wish to use the AI features (speech to text will still function)" + '\033[0m')
+            isSet = False
+        
+    # if not set, or verification failed print instructions on how to set it manually
+    if(isSet == False):
+        print('\033[38;5;208m' + "\nYou can set up the OpenAI API-key and Organization ID environment variables manually by: "
+              + "\n\t1. Search for 'Environment Variables' in the start menu and click on 'Edit the system environment variables'."
+              + "\n\t2. Click on 'Environment Variables...'."
+              + "\n\t3. Click on 'New...' under the 'User variables' section."
+              + "\n\t4. Variable name: OPENAI_API_KEY, Variable value: your api key (e.g. sk-abc123def456ghi789jkl012mno345pqr678stu901vwx234yz)"
+              + "Create another variable with the name OPENAI_ORG and the set the value as to your organization ID (e.g. org-1a2b3c4d5e)\n."
+              + '\033[0m', file=sys.stderr)
+        return
+    
+# called when the script is run
+initial_setup_check()
 
 def transcribe_speech():
     global file_ready_counter
@@ -75,7 +163,7 @@ def transcribe_speech():
     
     while True:
         # wait for file to be ready
-        while file_ready_counter<i:
+        while file_ready_counter < i:
             time.sleep(0.01)
         
         # define openai api key and organization
@@ -84,33 +172,40 @@ def transcribe_speech():
 
         # get spoken word as text from wav file 
         result = model.transcribe("test"+str(i)+".wav")
-        spoken_dialogue = result["text"].strip()
-        print('\033[96m' + "\nRAW TRANSCRIPTION:\n" + spoken_dialogue + '\033[0m', file=sys.stderr)
+        raw_transcript = result["text"].strip()
+        print('\033[96m' + "\nRAW TRANSCRIPTION:\n" + raw_transcript + '\033[0m', file=sys.stderr)
         
         # autocorrect feauture
-        corrected_dialogue = query_gpt_autocorrect(spoken_dialogue)
-        print('\033[38;5;208m' + "\nCORRECTED TRANSCRIPTION:\n " + corrected_dialogue + '\033[0m', file=sys.stderr)
+        corrected_dialogue = raw_transcript
+        try:
+            corrected_dialogue = query_gpt_autocorrect(raw_transcript)
+            print('\033[38;5;208m' + "\nCORRECTED TRANSCRIPTION:\n " + corrected_dialogue + '\033[0m', file=sys.stderr)
+            _hasKey = True
+        except:
+            pass
         
         # saves a record of the transcription to a log file to folder in appdata
         save_to_logfile(corrected_dialogue)
         
         # if the 1st word spoken is close to the pseudonym, then run a GPT query and overwrite the result
-        similarity = check_text_similarity((corrected_dialogue.split(" ")[0]).lower, pseudonym)
+        similarity = check_text_similarity((corrected_dialogue.split(" ")[0]).lower, _pseudonym)
         
-        # remove all punctuation from the corrected_dialogue for checking if the 1st or 2nd word is the pseudonym (sometimes there is a comma or period before/after the pseudonym)
+        # remove all punctuation from the corrected_dialogue for checking if any of the 1st 3 words is the pseudonym (sometimes there is a comma or period before/after the pseudonym)
         translator = str.maketrans('', '', string.punctuation) # Create a translation table that maps every punctuation character to None
-        corrected_dialogue_noPunc = corrected_dialogue.translate(translator)
+        raw_transcript = corrected_dialogue.translate(translator)
+        firstWords = raw_transcript.lower().strip().split(" ")[:3]
+        isAQuery = any(word.lower() == _pseudonym.lower() for word in firstWords) or similarity > 80
         
-        # gets first 2 words in the dialogue. For checking if we are talking to the assistant (said name of assistant).
-        firstWords = corrected_dialogue_noPunc.lower().strip().split(" ")[:2]
-        
-        # if we are talking to the assistant, then run a GPT query and overwrite the result with GPT's response
-        if any(word.lower() == pseudonym.lower() for word in firstWords) or similarity > 80:
+        # if we are talking to the assistant, then run a GPT query - and will get a response from the assistant as though we are talking to it
+        if _hasKey and isAQuery:
             
             if(_debug): 
                 print ("(info) We are talking to the assistant")
                 
+            # clear the clipboard
+            pyperclip.copy("")
             clipboard_text = ""
+            ocr_text = ""   
             
             isQuery = query_gpt_is_inquiry_or_request(corrected_dialogue)
             if(_debug): 
@@ -123,27 +218,24 @@ def transcribe_speech():
                     print ("We are asking the assistant to analyze text")
                     
                 # do window OCR for wider context
-                get_window_text_ocr()
+                ocr_text = get_window_text_ocr_pysseract()
                 # process the text - runs a GPT autocorrect
                 clipboard_text = "\n" + get_text_from_clipboard()
-                corrected_dialogue = corrected_dialogue[len(analyze_text_commands):]  # remove the 1st word from the spoken text
+                corrected_dialogue = corrected_dialogue[len(_analyze_text_commands):]  # remove the 1st word from the spoken text
                 corrected_dialogue = corrected_dialogue.strip()
                 corrected_dialogue = corrected_dialogue.lstrip(".,:;!?")  # removing any leading punctuation and spaces
                 corrected_dialogue = corrected_dialogue.strip()
             
-            feedback = "Asking " + pseudonym + "..."
-            
             if(clipboard_text != ""):
-                feedback = "Asking " + pseudonym + " about: " + clipboard_text
+                feedback = "Asking " + _pseudonym + " about: " + clipboard_text
                 
             print(feedback, file=sys.stderr)
-            corrected_dialogue = query_gpt(corrected_dialogue + clipboard_text)  # RB: Query GPT and overwrite the result with GPT's response
-            print('\033[95m' + "\n" + pseudonym + " says:\n" + corrected_dialogue + '\033[0m', file=sys.stderr)
+            corrected_dialogue = query_gpt_chat(corrected_dialogue + clipboard_text, ocr_text)  # RB: Query GPT and overwrite the result with GPT's response
+            print('\033[95m' + "\n" + _pseudonym + " says:\n" + corrected_dialogue + '\033[0m', file=sys.stderr)
             pyperclip.copy(corrected_dialogue)
-            
+        
+        # Regular speech-to-text transcription (auto-typing)
         else: 
-            # Regular speech-to-text transcription, with autocorrect
-            # GetWindowText()
             if(_debug):
                 print ("(info) Transcribing speech. No GPT query.")
                 
@@ -173,51 +265,38 @@ import pygetwindow as gw
 import pyautogui
 import easyocr
 import cv2
+import pytesseract
 
-windowText = ""
-def get_window_text_ocr():
-    # Clear the window text
-    ocrPromptText = ""
-    # Create an OCR reader
-    reader = easyocr.Reader(['en'])  # replace 'en' with the language you want
+def get_window_text_ocr_pysseract():
     # Get the active window
     active_window = gw.getActiveWindow()
 
-    # Check if the window is visible and has a non-zero size
     if active_window.visible and active_window.width > 0 and active_window.height > 0:
         # Take a screenshot of the active window
         screenshot = pyautogui.screenshot(region=(active_window.left, active_window.top, active_window.width, active_window.height))
-        # Convert the image into a numpy array
-        screenshot_np = np.array(screenshot)
 
-        # Print the name of the app
-        print(f"App Name: {active_window.title}")
+        # Convert the screenshot PIL Image to an OpenCV Image (numpy array)
+        screenshot_np = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
 
-        # Use OCR to recognize the text in the image
-        # Resize the image using OpenCV instead of 'PIL.Image.ANTIALIAS'
-        model_height = 64  # Set the desired model height for easyocr
-        img_height = screenshot_np.shape[0]
-        img_width = screenshot_np.shape[1]
-        ratio = model_height / img_height
-        resized_img = cv2.resize(screenshot_np, (int(img_width * ratio), model_height), interpolation=cv2.INTER_LINEAR)
+        # Perform OCR on the image using Tesseract
+        ocr_text = pytesseract.image_to_string(screenshot_np)
+        
+        ocr_prompt = ("Here is an OCR output of the text in the application that I am looking at (the focused window): " + ocr_text + "\n The focused window's application name is: " + active_window.title
+                    + "If it is relevent to my query, please use its info to help answer my query"
+                    + "it's out of context or you don't need it you can ignore it - BUT, if there is some comical way to tie it cheekily into your response(s) e.g. via analogies (tying it into the response(s) in some comedic way), please do so.")
 
-        recognized_texts = reader.readtext(resized_img, add_margin=0.55, width_ths=0.7, link_threshold=0.8, decoder='beamsearch', beamWidth=10)
-        texts = [item[1] for item in recognized_texts]  # Extract only the text from each tuple
-        ocrWindowText = " ".join(texts)  # Join all recognized texts into a single string
-        ocrPromptText = "Here is an OCR output of the text in the application that I am looking at (the focused window): " + ocrWindowText + "\n The focused window's application name is: " + active_window.title;
-        print("\n[OCR output]\n" + ocrPromptText)
-    else:
-        print("No active visible window.")
-
-styleGuide = "Rephrase what I said to be in the style of shakespeare. Feel free to add deeep insights and metaphors like shakespear would if the context of the provided text can be reflected in shakespeare's philosphy and actual known life experience. " # "Fix run on sentences and puncuation. Don't change my style of speech. Use a light touch. "
+        # Print the recognized text
+        if(len(ocr_text) > 0): print(f"Recognized Text in window: {active_window.title}")
+        
+        return ocr_prompt
 
 # [FYI] gpt models: https://platform.openai.com/docs/guides/gpt
-def query_gpt(string=""):
+def query_gpt_chat(query="", windowText = ""):
     parameters = {
         'model': 'gpt-4',
         'messages': [
             {"role": "system", "content": "You are a helpful assistant. You speak exactly like snoop dogg, but as brilliant as Bill Gates." }, #+ random_prompt_surprise},  
-            {"role": "user", "content": string}
+            {"role": "user", "content": query + "\nHere is the text from the window that I am looking at (the focused window):\n" + windowText}
         ]
     }
     response = openai.ChatCompletion.create(**parameters)
@@ -225,7 +304,7 @@ def query_gpt(string=""):
 
 def query_gpt_is_inquiry_or_request(string=""):
     parameters = {
-        'model': 'gpt-3.5-turbo',
+        'model': 'gpt-4',
         'messages' : [
             { "role": "system", "content": 
                     "Please return the word 'yes' if the provided text explicitly asks a question for or about you, requests your expertise, " 
@@ -252,21 +331,20 @@ def query_gpt_is_inquiry_or_request(string=""):
 
 def query_gpt_autocorrect(string=""):
     parameters = {
-        'model': 'gpt-3.5-turbo', # 'gpt-3.5-turbo',
+        'model': 'gpt-4', # 'gpt-3.5-turbo',
         'messages': [
         { "role": "system","content": 
-            "Your primary role is to refine transcriptions generated by an Automatic Speech Recognition (ASR) AI. Your task involves the following:"
-            + "\n\t1. Rectify inaccuracies where the ASR AI has misinterpreted spoken words with similar sounding words."
-            + "\n\t2. Predict and replace the misinterpreted words with the words that you think I really said."
-            + "\n\t3. Make necessary grammatical corrections, especially in cases of run-on sentences and punctuation. It's important to maintain my speech style, so use a minimalistic approach."
-            + "For instance, if the text says 'yo, how are you doing?' do not modify it to 'hello, how are you doing' "
-            + "And if the text says 'Hello, how are you doing?' do not modify it to 'Yo, how are you doing?'. In the context, it's unlikely that ASR mistook 'hello' (2 syllabals) for 'yo' (1 syllable), and vice-versa. "
-            + "It's key that you preserve my manner of speech. "
-            + "\n\nNote: I often discuss programming, particularly in C-Sharp or Python, and frequently ask questions related to the Unity engine, since I'm a developer. "
+            "Your ONLY role is to provide corrections to transcriptions generated by an Automatic Speech Recognition (ASR) AI. DO NOT generate responses or provide answers to any content in the transcriptions. Your task is limited to identifying and correcting mistakes in the transcriptions. \nYour job description:"
+            + "\n\t1. Rectify inaccuracies where the ASR AI seems to ahve misinterpreted spoken words with similar sounding words."
+            + "\n\t2. Make necessary grammatical corrections, especially in cases of run-on sentences and punctuation. It's important to maintain my speech style, so use a minimalistic approach."
+            + "\n\t2. If the text is correct and does not need any modifications, just return the text as is."
+            + "\nExample: If the text reads 'yo, how are you doing?' do not modify it to 'hello, how are you doing'; keep the word 'yo'. "
+            + "An inverse example: If the text reads 'Below, how are you doing' then 'Hello, how are you doing?' was probably what I said and can be corrected as such. "
+            + "\n\nNotes: "
+            + "\n\t1: I often discuss programming, particularly in C-Sharp or Python, and frequently ask questions related to the Unity engine, since I'm a developer. "
             + "In such cases, I'll often use technical jargon like: '...interface called I in it statics...' which I'd intend to be: '...interface called IInitStatics...'. "
             + "Don't convert these into non-technical language. Instead, try to predict what they should be in the given context when the context appears programming related. "
-            + "\n\n MOST IMPORTANTLY: DO NOT RESPOND WITH AN ANSWER OR YOUR THOUGHTS - ONLY MAKE CORRECTIONS. "
-            + windowText
+            + "\n\t 2: I may say the word '" + _pseudonym + "' in the sentence (this is someone's name). This word (name) is intentional and should not be changed. "
         },
             {"role": "user", "content": string}
         ]
@@ -285,6 +363,7 @@ import win32clipboard
 import pyperclip
 def get_text_from_clipboard():
     win32clipboard.OpenClipboard()
+    selected_text = ""
     try:
         selected_text = win32clipboard.GetClipboardData(win32clipboard.CF_UNICODETEXT)
     except TypeError:
@@ -292,16 +371,6 @@ def get_text_from_clipboard():
     finally:
         win32clipboard.CloseClipboard()
     return selected_text
-
-def set_registry_value(path, name, value):
-    try:
-        winreg.CreateKey(winreg.HKEY_CURRENT_USER, path)
-        registry_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, path, 0, winreg.KEY_WRITE)
-        winreg.SetValueEx(registry_key, name, 0, winreg.REG_SZ, value)
-        winreg.CloseKey(registry_key)
-        return True
-    except WindowsError:
-        return False
 
 #keyboard events
 pressed = set()
@@ -333,9 +402,6 @@ def record_speech():
     global file_ready_counter
     global stop_recording
     global is_recording
-    
-    # clear the clipboard
-    pyperclip.copy("")
 
     is_recording=True
     chunk = 1024  # Record in chunks of 1024 samplesSure, I'll do my best to rectify any inaccuracies and make necessary grammatical corrections. Please provide me with the text that needs refinement.
