@@ -15,6 +15,7 @@ from pynput import keyboard
 from playsound import playsound
 from datetime import datetime
 from PyQt5.QtMultimedia import QAudioDeviceInfo
+from elevenlabslib import *
 import warnings
 
 ######## USER SETUP ########
@@ -30,7 +31,8 @@ import warnings
 # organization (org) can be found here: https://platform.openai.com/account/org-settings
 
 ######## TODO (DEV NOTES) ########
-# • Search google for the answer to a question
+# • 
+# • Search google for the answer to a question if unsure
 # • Give Snoop a voice
 # • Chat history with Snoop - keeps a record of all convos in an indexed database
 # • Specify a personality for the assistant by "Hey, Shaskespeare, can you do this for me?" 
@@ -48,7 +50,8 @@ playsound("model_loaded.wav")
 print(f"{model_name} model loaded")
 
 # global variables
-_pseudonym = "Snoop"  # RB: Pseudonym to be used for the assistant
+_pseudonym = "Bean"  # RB: Pseudonym to be used for the assistant
+_elevenLabsVoice = "DrNeab"
 _analyze_text_commands = ["help me out", "help me", "help", "help me out with this", "help me out with this text", "help me out with this", "can you do this", "analyze this", "analyze this text", "analyze this text for me", "what is this"]
 _reg_path = r"SOFTWARE\RB Design\Whisper Assistant"
 _hasKey = False
@@ -111,11 +114,19 @@ def check_registry_key(name):
         return False
 
 def initial_setup_check():
-    if "OPENAI_API_KEY" in os.environ and "OPENAI_ORG" in os.environ:
+    if os.getenv("OPENAI_API_KEY") and os.getenv("OPENAI_ORG"):
+        if(check_registry_key("KeyFound") == False):
+            set_registry_value("KeyFound", "True")
+            print('\033[38;5;208m' 
+                + "\nAPI key and organization ID found. "
+                + "You can make AI queries by saying 'Hey, " + _pseudonym + ", ...' " + 
+                + "or simply '"+ _pseudonym + ", ...' (e.g. 'Hey, " + _pseudonym + ", what is the mass of an unladen swallow?')\n"
+                + '\033[0m', file=sys.stderr)
         hasKey = True
         return
     
     if(check_registry_key("InitialSetup")):
+        set_registry_value("KeyFound", "False")
         return
     
     set_registry_value("InitialSetup", "True")
@@ -156,6 +167,20 @@ def initial_setup_check():
 # called when the script is run
 initial_setup_check()
 
+# speech synthesis by eleven labs
+def play_voice(text=""):
+    user = ElevenLabsUser(os.getenv("ELEVEN_LABS_API_KEY"))
+    voice = user.get_voices_by_name(_elevenLabsVoice)[0]  # This is a list because multiple voices can have the same name
+    
+    # OLD: voice.generate_play_audio_v2(text, playbackOptions=PlaybackOptions(runInBackground=True))
+    voice.generate_stream_audio_v2(text, playbackOptions=PlaybackOptions(runInBackground=True))
+    
+    for historyItem in user.get_history_items_paginated():
+        if historyItem.text == text:
+            # The first items are the newest, so we can stop as soon as we find one.
+            historyItem.delete()
+            break
+
 def transcribe_speech():
     global file_ready_counter
     i=1
@@ -169,13 +194,13 @@ def transcribe_speech():
         # define openai api key and organization
         openai.organization = os.getenv("OPENAI_ORG")
         openai.api_key = os.getenv("OPENAI_API_KEY")
-
-        # get spoken word as text from wav file 
+        
+        # transcribe speech
         result = model.transcribe("test"+str(i)+".wav")
         raw_transcript = result["text"].strip()
         print('\033[96m' + "\nRAW TRANSCRIPTION:\n" + raw_transcript + '\033[0m', file=sys.stderr)
         
-        # autocorrect feauture
+        # autocorrect feature
         corrected_dialogue = raw_transcript
         try:
             corrected_dialogue = query_gpt_autocorrect(raw_transcript)
@@ -221,10 +246,6 @@ def transcribe_speech():
                 ocr_text = get_window_text_ocr_pysseract()
                 # process the text - runs a GPT autocorrect
                 clipboard_text = "\n" + get_text_from_clipboard()
-                corrected_dialogue = corrected_dialogue[len(_analyze_text_commands):]  # remove the 1st word from the spoken text
-                corrected_dialogue = corrected_dialogue.strip()
-                corrected_dialogue = corrected_dialogue.lstrip(".,:;!?")  # removing any leading punctuation and spaces
-                corrected_dialogue = corrected_dialogue.strip()
             
             if(clipboard_text != ""):
                 feedback = "Asking " + _pseudonym + " about: " + clipboard_text
@@ -232,12 +253,23 @@ def transcribe_speech():
             print(feedback, file=sys.stderr)
             corrected_dialogue = query_gpt_chat(corrected_dialogue + clipboard_text, ocr_text)  # RB: Query GPT and overwrite the result with GPT's response
             print('\033[95m' + "\n" + _pseudonym + " says:\n" + corrected_dialogue + '\033[0m', file=sys.stderr)
+            
+            # copy the response to the clipboard between the 
             pyperclip.copy(corrected_dialogue)
+
+            # speech synthesis eleven labs
+            play_voice(corrected_dialogue)
         
         # Regular speech-to-text transcription (auto-typing)
         else: 
             if(_debug):
                 print ("(info) Transcribing speech. No GPT query.")
+            
+            corrected_dialogue = corrected_dialogue.strip() # remove leading or trailing spaces
+            corrected_dialogue = corrected_dialogue.lstrip(".,:;!?")    # remove any leading punctuation 
+            if(corrected_dialogue.lower().startswith("git")):   # if starts with 'git' then remove trailing period if it exists
+                print ("[git command]")
+                corrected_dialogue = corrected_dialogue.rstrip(".")
                 
             for char in corrected_dialogue:
                 try:
@@ -295,7 +327,9 @@ def query_gpt_chat(query="", windowText = ""):
     parameters = {
         'model': 'gpt-4',
         'messages': [
-            {"role": "system", "content": "You are a helpful assistant. You speak exactly like snoop dogg, but as brilliant as Bill Gates." }, #+ random_prompt_surprise},  
+            {"role": "system", "content": 
+                "You are a helpful assistant. You speak like Mr. Bean (do your best), but are as brilliant as Bill Gates. "
+             +  "Despite your 'Mr. Bean' nature, you are skilled at being relatively concise in your responses, with a few 'beanisms' sprinked in here and there in some responses."},
             {"role": "user", "content": query + "\nHere is the text from the window that I am looking at (the focused window):\n" + windowText}
         ]
     }
@@ -326,7 +360,7 @@ def query_gpt_is_inquiry_or_request(string=""):
         print("\n[support query]")
         return True
     else:
-        print("\n\n[transcript only]")
+        print("\n[transcript only]")
         return False
 
 def query_gpt_autocorrect(string=""):
@@ -343,6 +377,8 @@ def query_gpt_autocorrect(string=""):
             + "\n\nNotes: "
             + "\n\t1: I often discuss programming, particularly in C-Sharp or Python, and frequently ask questions related to the Unity engine, since I'm a developer. "
             + "In such cases, I'll often use technical jargon like: '...interface called I in it statics...' which I'd intend to be: '...interface called IInitStatics...'. "
+            + "I'll also use video game words such as (for example) 'reticle', which is often misinterpreted as 'radical'."
+            + "I'll also say things that start with the word 'git', which can be translated to a git command. E.g. When I say 'Git add all', that means 'git add -A' (note: git must have a lowercase g). "
             + "Don't convert these into non-technical language. Instead, try to predict what they should be in the given context when the context appears programming related. "
             + "\n\t 2: I may say the word '" + _pseudonym + "' in the sentence (this is someone's name). This word (name) is intentional and should not be changed. "
         },
