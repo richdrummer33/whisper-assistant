@@ -12,6 +12,7 @@ import openai
 import time
 import string
 import shutil
+import OcrWindowsAutomation as winauto
 import pandas as pd
 from pynput import keyboard
 from playsound import playsound
@@ -38,6 +39,11 @@ import warnings
 #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 ######## TODO (DEV NOTES) ########
+# • Break timer - if working or doing personal projects, takes mouse & kb control away and forces me to take break as long as not in meeting. Is resistant to keystrokes (fights back)
+# • Auto-GUI interactions - do things like "find this file" and allow pyautogui to do it 
+# • Can perform searches and analysis on projects/data 
+#       • Can keyword-index contents of files using Everything - for basic keyword searches
+#       • Can index relevant folder data with llama, and perform queries on them (can it also do custom indexing of files? E.g. by keyword or tag?)
 # • Record audio in chunks and take screencaps of the whisper window in chunks, and then process the chunks in parallel. This will allow for a more responsive UI.
 # • Special voice commands like 'context...' or 'reply...'
 # • Chat history with assistant - keeps a record of all convos in an indexed database
@@ -86,7 +92,8 @@ playsound("model_loaded.wav")
 print(f"{model_name} model loaded")
 
 # global variables
-_pseudonym = "Bean"  # RB: Pseudonym to be used for the assistant
+_pseudonym = "bean"  # RB: Pseudonym to be used for the assistant
+_windowsAutomationKeyword = "windows"
 _elevenLabsVoice = "DrNeab"
 _analyze_text_commands = ["help me out", "help me", "help", "help me out with this", "help me out with this text", "help me out with this", "can you do this", "analyze this", "analyze this text", "analyze this text for me", "what is this"]
 _reg_path = r"SOFTWARE\RB Design\Whisper Assistant"
@@ -255,6 +262,8 @@ initial_setup_check()
 ################################ speech synthesis by eleven labs ##########################################
 ###########################################################################################################
 def play_voice(text=""):
+    return
+
     user = ElevenLabsUser(os.getenv("ELEVEN_LABS_API_KEY"))
     voice = user.get_voices_by_name(_elevenLabsVoice)[0]  # This is a list because multiple voices can have the same name
     
@@ -335,7 +344,6 @@ def transcribe_speech():
         ### WE ARE ASKING THE ASSISTANT FOR INSIGHT - RUN A GPT QUERY ###
         #################################################################
         if _hasKey and isAQuery:
-            
             # save a "before" screenshot for record keeping 
             screenshot = get_chat_window_screenshot_pysseract()
             file_number = increment_registry_value("AudioFileIndex")
@@ -349,20 +357,13 @@ def transcribe_speech():
             clipboard_text = ""
             ocr_text = ""   
             
-            isQuery = True # query_gpt_is_inquiry_or_request(corrected_dialogue)
-            if(_debug): 
-                print("(info) isQuery: " + str(isQuery))
+            # if raw text contains the analyze_text_keyword, then run 
+            # if the raw_transcript has the analyze_text_keyword, then run 
+            # do window OCR for wider context
+            # ocr_text = get_window_text_ocr_pysseract()
             
-            # if the first spoken text is the analyze_text_keyword then copy the text to the clipboard for inquiry
-            if isQuery: # analyze_text_commands.lower() in  corrected_dialogue.lower():
-                
-                if(_debug): 
-                    print ("We are asking the assistant to analyze text")
-                    
-                # do window OCR for wider context
-                # ocr_text = get_window_text_ocr_pysseract()
-                # process the text - runs a GPT autocorrect
-                clipboard_text = "\n" + get_text_from_clipboard()
+            # process the text - runs a GPT autocorrect
+            clipboard_text = "\n" + get_text_from_clipboard()
             
             feedback = ""
             if(clipboard_text != ""):
@@ -404,7 +405,7 @@ def transcribe_speech():
             for char in corrected_dialogue:
                 try:
                     pykeyboard.type(char)
-                    time.sleep(0.0025)
+                    time.sleep(0.1)
                 except Exception as e:
                     print("empty or unknown symbol" + e)    
                     
@@ -520,6 +521,74 @@ def instruct_mouse_movement(ocr_df, target_text, deviation=50, speed=5):
 
     return True
 
+def perform_gui_actions(actions):
+    winauto.perform_gui_sequence_of_operations(actions)
+
+import json
+def gpt_gui_actions():
+    my_custom_functions = [ {
+        'name': 'perform_gui_actions',
+        'description': 'Perform a sequence of GUI operations including mouse movements, clicks, and keyboard actions.',
+        'parameters': {
+            'type': 'array',
+            'items': {
+                'oneOf': [
+                    {
+                        'type': 'object',
+                        'properties': {
+                            'text': {
+                                'type': 'string',
+                                'description': 'Text element to move the cursor to'
+                            },
+                            'click_action': {
+                                'type': 'string',
+                                'description': 'Click action to perform, either left mouse button (lmb) or right mouse button (rmb)'
+                            }
+                        },
+                        'required': ['text', 'click_action']
+                    },
+                    {
+                        'type': 'object',
+                        'properties': {
+                            'keystrokes': {
+                                'type': 'string',
+                                'description': 'Characters to be typed using pykeyboard'
+                            }
+                        },
+                        'required': ['keystrokes']
+                    },
+                    {
+                        'type': 'object',
+                        'properties': {
+                            'key_action': {
+                                'type': 'string',
+                                'description': 'Key action to be performed using pykeyboard'
+                            }
+                        },
+                        'required': ['key_action']
+                    }
+                ]
+            }
+        }
+    }
+    ]
+    
+   # Assume 'text_click_tuples' is the list of tuples you want to process
+    response = openai.ChatCompletion.create(
+    model = 'gpt-3.5-turbo',
+    messages = [{'role': 'user', 'content': "open 'This PC'"}],
+    functions = my_custom_functions,
+    function_call = 'auto'
+    )   
+    
+    if response.get("function_call"):
+        function_name = response["function_call"]["name"]
+        function_args = json.loads(response["function_call"]["arguments"])
+
+    print(response)
+
+        
+
 
 # [FYI] gpt models: https://platform.openai.com/docs/guides/gpt
 def query_gpt_chat(query="", windowText = ""):
@@ -527,7 +596,6 @@ def query_gpt_chat(query="", windowText = ""):
         'model': 'gpt-4',
         'messages': [
             {"role": "system", "content":
-                  
                 "Embody Mr. Bean - renowned for concise yet insightful responses peppered with his unique 'Beanisms'. Respond helpfully to inquiries, displaying deep insight roughly within the bounds of Bean's vocabulary. Embrace the challenge of the verbal palette of 'Bean'-like replies."
                 #+ "For inquiries that truly demand a detailed response, provide a two sentence summary <in angled brackets> upfront with the key details -not *too* short. "
                 #+ "follow this with the detailed response if necessarry. "
@@ -549,37 +617,6 @@ def query_gpt_chat(query="", windowText = ""):
     }
     response = openai.ChatCompletion.create(**parameters)
     return response.choices[0].message.content
-
-#### queries GPT to determine if the text is a query or not ####
-####  usurped by simply using the pseudonym as the trigger  ####
-# def query_gpt_is_inquiry_or_request(string=""):
-#     return True
-# 
-#     parameters = {
-#         'model': 'gpt-3.5-turbo',
-#         'messages' : [
-#             { "role": "system", "content": 
-#                     "Please return the word 'yes' if the provided text explicitly asks a question for or about you, requests your expertise, " 
-#                     + "seeks assistance, or designates a specific role or task for you to execute. If the text does not meet these conditions, "
-#                     + "return the word 'no'. Respond with 'yes' or 'no' only. "
-#             },
-#             { "role": "user", "content": string }
-#         ]
-#     }
-#     response = openai.ChatCompletion.create(**parameters)
-# 
-#     # Extract the assistant's reply
-#     assistant_reply = response.choices[0].message.content.lower()
-#     
-#     if(_debug): 
-#         print ("(info) is query GPT response: " + assistant_reply)
-# 
-#     if 'yes' in assistant_reply:
-#         print("\n[support query]")
-#         return True
-#     else:
-#         print("\n[transcript only]")
-#         return False
 
 def query_gpt_autocorrect(string=""):
     parameters = {
@@ -655,8 +692,8 @@ COMBINATIONS = [
             # {keyboard.Key.ctrl ,keyboard.Key.shift, keyboard.KeyCode(char="r")},
             # {keyboard.Key.ctrl ,keyboard.Key.shift, keyboard.KeyCode(char="R")},
             # tilda key
-            { keyboard.Key.f24 },
-            { keyboard.Key.alt_l, keyboard.KeyCode(char="m")}
+            { keyboard.Key.f11 },
+            # { keyboard.Key.alt_l, keyboard.KeyCode(char="m")}
         ],
         "command": "start record",
     },
