@@ -1,7 +1,6 @@
 import codecs
 import whisper
 import time
-import subprocess
 import threading
 import pyaudio
 import wave
@@ -12,7 +11,7 @@ import openai
 import time
 import string
 import shutil
-import OcrWindowsAutomation as winauto
+# import OcrWindowsAutomation as winauto
 import pandas as pd
 from pynput import keyboard
 from playsound import playsound
@@ -21,6 +20,7 @@ from PyQt5.QtMultimedia import QAudioDeviceInfo
 from elevenlabslib import *
 from elevenlabslib import helpers
 import warnings
+
 
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -39,6 +39,9 @@ import warnings
 #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 ######## TODO (DEV NOTES) ########
+# • [seperate script?] Checks if I've pushed to git on current branch and main branch at EOD and/or yells at me if I walk away at EOD and/or interrrupts sleep if I didn't push.
+# • [seperate script?] Auto STARTS/STOPS TOGGL. Detects when I'm in front of computer and says hello, maybe via mouse movement.
+# • AI monitors my writing (writing adjacent to my slack profile pic recog via cv2) and provides "ding" sfx - provides suggestions if the text has negative tones
 # • Break timer - if working or doing personal projects, takes mouse & kb control away and forces me to take break as long as not in meeting. Is resistant to keystrokes (fights back)
 # • Auto-GUI interactions - do things like "find this file" and allow pyautogui to do it 
 # • Can perform searches and analysis on projects/data 
@@ -62,7 +65,6 @@ import warnings
 #       • Allow users to define their own hotkey for toggling the mic state.
 #           ~ Set the assistant's name and personality in a config file and inform the user that they can change it there if they wish.
 #       • Allow users to define their name. 
-# • Detects when I'm in front of computer and says hello, maybe via mouse movement or webcam
 # • Search google for the answer to a question if unsure
 # • Specify a personality for the assistant by "Hey, Shaskespeare, can you do this for me?" 
 # • OCR a window for context and then respond to a question, as specified in my query
@@ -92,7 +94,9 @@ playsound("model_loaded.wav")
 print(f"{model_name} model loaded")
 
 # global variables
+_fullName = "Mr Bean"
 _pseudonym = "bean"  # RB: Pseudonym to be used for the assistant
+_improveKwd = "correct"
 _windowsAutomationKeyword = "windows"
 _elevenLabsVoice = "DrNeab"
 _analyze_text_commands = ["help me out", "help me", "help", "help me out with this", "help me out with this text", "help me out with this", "can you do this", "analyze this", "analyze this text", "analyze this text for me", "what is this"]
@@ -255,15 +259,11 @@ def initial_setup_check():
               + '\033[0m', file=sys.stderr)
         return
     
-# called when the script is run
-initial_setup_check()
 
 ###########################################################################################################
 ################################ speech synthesis by eleven labs ##########################################
 ###########################################################################################################
 def play_voice(text=""):
-    return
-
     user = ElevenLabsUser(os.getenv("ELEVEN_LABS_API_KEY"))
     voice = user.get_voices_by_name(_elevenLabsVoice)[0]  # This is a list because multiple voices can have the same name
     
@@ -336,14 +336,29 @@ def transcribe_speech():
         translator = str.maketrans('', '', string.punctuation) # Create a translation table that maps every punctuation character to None
         raw_transcript = corrected_dialogue.translate(translator)
         firstWords = raw_transcript.lower().strip().split(" ")[:3]
-        isAQuery = any(word.lower() == _pseudonym.lower() for word in firstWords) or similarity > 80
+        isAQuery                = any(word.lower() == _pseudonym.lower() for word in firstWords) or similarity > 80
+        isAnImprovementRequest  = any(word.lower() == _improveKwd.lower() for word in firstWords)
         if(_debug): 
             print ("(info) Is a query: " + str(isAQuery) + "\n(info) Has key: " + str(_hasKey))
             
         #################################################################
         ### WE ARE ASKING THE ASSISTANT FOR INSIGHT - RUN A GPT QUERY ###
         #################################################################
-        if _hasKey and isAQuery:
+        if _hasKey and isAnImprovementRequest:
+            # copy to clipboard
+            clipboard_text = get_text_from_clipboard()
+            
+            # if raw text contains the analyze_text_keyword, then run
+            print ("(info) We are asking the assistant to improve text")
+
+            # process the text - runs a GPT rewrite of the copied text
+            improvedText = query_gpt_autocorrect(clipboard_text, True)  # RB: Query GPT and overwrite the result with GPT's response
+            print('\033[95m' + improvedText + '\033[0m', file=sys.stderr)
+
+            # copy the response to the clipboard between the
+            pyperclip.copy(improvedText)
+            
+        elif _hasKey and isAQuery:
             # save a "before" screenshot for record keeping 
             screenshot = get_chat_window_screenshot_pysseract()
             file_number = increment_registry_value("AudioFileIndex")
@@ -405,7 +420,7 @@ def transcribe_speech():
             for char in corrected_dialogue:
                 try:
                     pykeyboard.type(char)
-                    time.sleep(0.1)
+                    time.sleep(0.01)
                 except Exception as e:
                     print("empty or unknown symbol" + e)    
                     
@@ -428,8 +443,8 @@ def save_to_logfile(dialogue="", audio_file_path=""):
 import numpy as np
 import pygetwindow as gw
 import pyautogui
-import easyocr
 import cv2
+# install cv2 by running: pip install opencv-python
 import pytesseract
 
 # returns an image of the active window
@@ -517,12 +532,12 @@ def instruct_mouse_movement(ocr_df, target_text, deviation=50, speed=5):
     center_y = target_row['top'] + target_row['height'] / 2
 
     # Instruct the mouse to move to the center of the bounding box
-    move_to_area(center_x, center_y, target_row['width'], target_row['height'], deviation, speed)
+    # move_to_area(center_x, center_y, target_row['width'], target_row['height'], deviation, speed)
 
     return True
 
-def perform_gui_actions(actions):
-    winauto.perform_gui_sequence_of_operations(actions)
+#def perform_gui_actions(actions):
+#    winauto.perform_gui_sequence_of_operations(actions)
 
 import json
 def gpt_gui_actions():
@@ -591,16 +606,16 @@ def gpt_gui_actions():
 
 
 # [FYI] gpt models: https://platform.openai.com/docs/guides/gpt
-def query_gpt_chat(query="", windowText = ""):
+def query_gpt_chat(query="", windowText = "", playVoice = False):
     parameters = {
         'model': 'gpt-4',
         'messages': [
             {"role": "system", "content":
-                "Embody Mr. Bean - renowned for concise yet insightful responses peppered with his unique 'Beanisms'. Respond helpfully to inquiries, displaying deep insight roughly within the bounds of Bean's vocabulary. Embrace the challenge of the verbal palette of 'Bean'-like replies."
-                #+ "For inquiries that truly demand a detailed response, provide a two sentence summary <in angled brackets> upfront with the key details -not *too* short. "
-                #+ "follow this with the detailed response if necessarry. "
-                # + "For straightforward inquiries, just a summary <in angled brackets> will suffice. "
-                + "Remember, you are speaking to Richard."
+                "Embody " + _fullName + " - you speek exactly like " + _fullName + " and have his personality. But you are as smart and knowledgeable as Bill Gates. "
+                 "For inquiries that truly demand a detailed response, provide a two sentence summary <in angled brackets> upfront with the key details -not *too* short. "
+                + "follow this with the detailed response only if necessarry. "
+                + "For straightforward inquiries, just a summary <in angled brackets> will suffice. "
+                + "Remember, you are speaking to Richard who is an experienced software dev and engineer."
                 },
             {"role": "user", "content":  query + "\nHere is the text from the focused window:\n" + windowText}
             
@@ -616,18 +631,35 @@ def query_gpt_chat(query="", windowText = ""):
         ]
     }
     response = openai.ChatCompletion.create(**parameters)
+    
+    if playVoice:
+        play_voice(response.choices[0].message.content)
+    
     return response.choices[0].message.content
 
-def query_gpt_autocorrect(string=""):
+def query_gpt_autocorrect(string="", improveWriting = False):
+    role1 = ""
+    role2 = ""
+    transcribe1 =  "Your ONLY role is to provide corrections to transcriptions generated by an Automatic Speech Recognition (ASR) AI. "
+    transcribe2 =  "Your task is limited to identifying and correcting mistakes in the transcriptions.\n"
+    improveWriting1 = "Your ONLY role is to rewrite the text to make it better. "
+    improveWriting2 = "Your task is limited to rewriting the text.\n"
+    if improveWriting:
+        role1 = improveWriting1
+        role2 = improveWriting2
+    else:
+        role1 = transcribe1
+        role2 = transcribe2
+
     parameters = {
         'model': 'gpt-3.5-turbo', # 'gpt-4',
         'messages': [
         { "role": "system","content": 
             # GPT-4 made a more...
-            "Your ONLY role is to provide corrections to transcriptions generated by an Automatic Speech Recognition (ASR) AI. "
-            "DO NOT generate responses or provide answers to any content in the transcriptions. "
-            "Your task is limited to identifying and correcting mistakes in the transcriptions.\n"
-            "Your job description:"
+            role1
+            + "DO NOT generate responses or provide answers to any content in the transcriptions. "
+            + role2
+            + "Your job description:"
             + "".join([
                 "\n\t1. Rectify inaccuracies where the ASR AI seems to have misinterpreted spoken words with similar sounding words.",
                 "\n\t2. Make necessary grammatical corrections, especially in cases of run-on sentences and punctuation. Maintain my speech style; be minimalistic.",
@@ -663,7 +695,7 @@ def query_gpt_autocorrect(string=""):
         ]
     }
     response = openai.ChatCompletion.create(**parameters).choices[0].message.content
-    return response
+    return response 
     
 from fuzzywuzzy import fuzz
 def check_text_similarity(text1, text2):
@@ -692,8 +724,8 @@ COMBINATIONS = [
             # {keyboard.Key.ctrl ,keyboard.Key.shift, keyboard.KeyCode(char="r")},
             # {keyboard.Key.ctrl ,keyboard.Key.shift, keyboard.KeyCode(char="R")},
             # tilda key
-            { keyboard.Key.f11 },
-            # { keyboard.Key.alt_l, keyboard.KeyCode(char="m")}
+            # { keyboard.Key.f11 },
+            { keyboard.Key.alt_l, keyboard.KeyCode(char="m")}
         ],
         "command": "start record",
     },
@@ -766,11 +798,16 @@ def record_speech():
 
 #------------
 
-#transcribe speech in infinte loop
+# RB startup things
+initial_setup_check()
+# timer_thread = threading.Thread(breaktimer.start_timer(query_gpt_chat("Hey Snoop, tell me in one sentence that it is time for me to take a break (I'm working).", "", playVoice=True)))
+# timer_thread.start()
+
+# transcribe speech in infinte loop
 t2 = threading.Thread(target=transcribe_speech)
 t2.start()
 
-#hot key events
+# hot key events
 def on_press(key):
     pressed.add(key)
 
