@@ -1,5 +1,7 @@
 import subprocess
 
+global_repo_path = "C:/Git/Unseen"
+
 # Check for unpushed commits
 def check_unpushed_commits(repo_path, branch="main"):
     """
@@ -48,21 +50,34 @@ def get_current_branch(repo_path):
         print(f"Unexpected error: {e}")
         return None
 
-if __name__ == "__main__":
-    repo_path = "/path/to/your/repo"
-    
-    branch = get_current_branch(repo_path)
-    if branch:
-        print(f"The currently checked-out branch in repository '{repo_path}' is '{branch}'")
-    else:
-        print(f"Could not determine the currently checked-out branch in repository '{repo_path}'")
+import tkinter as tk
+from tkinter import messagebox
 
-# Run the checks
-if __name__ == "__main__":
-    repo_path = "C:/Git/Unseen"
+def show_message_and_wait(title, message):
+    root = tk.Tk()
+    root.withdraw()  # Hides the root window
+    messagebox.showinfo(title, message)
+    root.mainloop()
+    
+def status_check():
+    # 1. check current branch state
+    current_branch = get_current_branch(global_repo_path)
+    
+    if check_unpushed_commits(global_repo_path, current_branch):
+        print(f"There are unpushed commits on branch '{current_branch}' in repository '{global_repo_path}'")
+        show_message_and_wait("Unpushed commits", f"There are unpushed commits on branch '{current_branch}'")
+    else:
+        print(f"All commits on branch '{current_branch}' in repository '{global_repo_path}' have been pushed")
+    
+    # 2. check main branch state
     branch_to_check = "main-reorg"
     
-    if check_unpushed_commits(repo_path, branch_to_check):
-        print(f"There are unpushed commits on branch '{branch_to_check}' in repository '{repo_path}'")
+    if check_unpushed_commits(global_repo_path, branch_to_check):
+        print(f"There are unpushed commits on branch '{branch_to_check}' in repository '{global_repo_path}'")
+        show_message_and_wait("Unpushed commits", f"There are unpushed commits on branch '{branch_to_check}'")
     else:
-        print(f"All commits on branch '{branch_to_check}' in repository '{repo_path}' have been pushed")
+        print(f"All commits on branch '{branch_to_check}' in repository '{global_repo_path}' have been pushed")
+
+
+if __name__ == "__main__":
+    status_check()

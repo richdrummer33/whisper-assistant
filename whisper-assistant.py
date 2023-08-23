@@ -24,6 +24,7 @@ import warnings
 
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
 # NOTES FOR USERS:
 # API key can be found/made here: https://platform.openai.com/account/api-keys
 # organization (org) can be found here: https://platform.openai.com/account/org-settings
@@ -312,6 +313,10 @@ def transcribe_speech():
         result = model.transcribe("test"+str(i)+".wav")
         raw_transcript = result["text"].strip()
         print('\033[96m' + "\nRAW TRANSCRIPTION:\n" + raw_transcript + '\033[0m', file=sys.stderr)
+        
+        # if "computer" or "computer." is the last string, remove it (voice attack)
+        raw_transcript.strip("computer")
+        raw_transcript.strip("computer.")
         
         # autocorrect feature
         corrected_dialogue = raw_transcript

@@ -3,6 +3,7 @@ import datetime
 import requests
 import threading
 import os
+import GitStatusChecker as git_checker
 from pytz import timezone
 
 ####################################################################################
@@ -66,6 +67,7 @@ _last_any_activity_time = time.time() - 999  # start at some long time ago so th
 _monitor_loop_permitted = True # the monitor loop can run
 _timer_running = False
 _day_ended = False
+_total_hours = 0
 
 ####################################################################################
 #############################   MISC METHODS   #####################################
@@ -130,7 +132,7 @@ def start_new_timer():
     if _debug_api: print(response)
     
     # notify user
-    print("Started new timer at" + human_readable_datetime() + "...")
+    print("STARTED new timer at: " + human_readable_datetime() + "...\n")
     play_notification_sound("C:\\Windows\\Media\\Speech On.wav")
     os.system("msg * Timer started!")
     
@@ -195,8 +197,12 @@ def stop_current_timer(auto = False, playsound = True, self = _toggl_api):
         play_notification_sound("C:\\Windows\\Media\\Speech Off.wav")
         
     # notify user
-    print("Stopped timer at " + human_readable_datetime() + "...")
+    print("STOPPED timer at: " + human_readable_datetime() + "...\n")
     os.system("msg * Timer stopped!")
+    
+    # increment total hours
+    global _total_hours
+    _total_hours += (stop_time - start_time).total_seconds() / 3600
     
     return response.json()
 
@@ -349,12 +355,14 @@ def handle_new_day_check():
 
 def buffer_keystroke(key):
     # add the key to the buffer. If the buffer is full, remove the oldest key.
+    print("Key pressed: {0}".format(key))
     try:
         char_key = key.char
         if key == keyboard.Key.backspace:
             _keystroke_buffer.pop()
         elif key == keyboard.Key.space:
             char_key = " "
+            _keystroke_buffer.append(char_key)
         elif key == keyboard.Key.enter:
             _keystroke_buffer.clear()
         else:
@@ -371,7 +379,7 @@ def buffer_keystroke(key):
 def on_mouse_button_activity(x, y, button, pressed):
     global _last_work_activity_time
     window = on_interacted_with_any_window()
-    if window and _work_comms_app in window.title.lower():
+    if window and is_work_app_focused(_work_apps):
         handle_new_day_check()
 
 def init_activity_timers():
@@ -401,7 +409,7 @@ def on_keyboard_activity(key):
                 if _timer_running: 
                     _on_break = True
                     print (to_print + " stopping timer.")
-                    threading.Thread(target=stop_current_timer, args=(True, True)).start()
+                    threading.Thread(target=stop_current_timer, args=(False, True)).start()
             return
         if query_for_back_slack_message():
             if not _timer_running:
@@ -449,6 +457,9 @@ try:
             if _debug_logic: print("User work activity timed out - stopping timer.")
             threading.Thread(target=stop_current_timer, args=(True, False)).start()
             play_notification_sound("C:\\Windows\\Media\\Speech Sleep.wav")
+            # if the time of day is past 7pm, then trigger a git status check
+            if datetime.datetime.now().hour >= 19:
+                git_checker.status_check()
             
         # Loop to check activity again after N seconds
         if _monitor_loop_permitted:
