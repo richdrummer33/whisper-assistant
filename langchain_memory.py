@@ -23,7 +23,7 @@ def signal_handler(sig, frame):
 if __name__ == "__main__":
     # initialize open AI
     openai.api_key = os.getenv("OPENAI_API_KEY")
-    llm = ChatOpenAI(temperature=0.6, model="gpt-4",
+    llm = ChatOpenAI(temperature=0.6, model="gpt-3.5-turbo",
                      max_tokens=250, streaming=False)
 
     # define prompt template
@@ -45,7 +45,9 @@ if __name__ == "__main__":
         prompt=prompt,
         llm=llm,
         verbose=False,
+        ### CHANGE TO SUMMARY MEMORY ###
         memory=ConversationBufferMemory(ai_prefix="Ship's Captain"),
+        ### CHANGE TO SUMMARY MEMORY ###
     )
 
     # take in user input in the console
