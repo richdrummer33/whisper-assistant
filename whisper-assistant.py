@@ -11,6 +11,7 @@ import openai
 import time
 import string
 import shutil
+import torch
 # import OcrWindowsAutomation as winauto
 import pandas as pd
 from pynput import keyboard
@@ -87,10 +88,17 @@ import warnings
 # • Cave Johnson's assistant's assistant
 # • Cave Johnson's assistant's assistant's assistant
 
+# GPU CUDA for whisper
+# device = "cuda" if torch.cuda.is_available() else "cpu"
+device = "cpu"
+if device == "cuda":
+    torch.cuda.init()
+print(f"Using device: {device}")
+
 # model loading
 print("loading model...")
 model_name = "tiny"
-model = whisper.load_model(model_name)
+model = whisper.load_model(model_name).to(device)
 playsound("model_loaded.wav")
 print(f"{model_name} model loaded")
 
@@ -298,6 +306,7 @@ def play_voice(text=""):
 ###########################################################################################################
 def transcribe_speech():
     global file_ready_counter
+    global device
     i=1
     print("ready - start transcribing by pressing Alt-M ...\n")
     
@@ -311,6 +320,7 @@ def transcribe_speech():
         openai.api_key = os.getenv("OPENAI_API_KEY")
         
         # transcribe speech
+        # with torch.cuda.device(device):
         result = model.transcribe("test"+str(i)+".wav")
         raw_transcript = result["text"].strip()
         print('\033[96m' + "\nRAW TRANSCRIPTION:\n" + raw_transcript + '\033[0m', file=sys.stderr)
@@ -781,7 +791,7 @@ def record_speech():
     playsound("on.wav")
 
     while stop_recording==False:
-        data = stream.read(chunk)
+        data = stream.read(chunk) # , always_2d=True) # RB Added always_2d=True. Needed for CUDA? See ref: https://stackoverflow.com/questions/75775272/cuda-and-openai-whisper-enforcing-gpu-instead-of-cpu-not-working
         frames.append(data)
 
     # Stop and close the stream
