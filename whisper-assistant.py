@@ -90,14 +90,14 @@ import warnings
 
 # GPU CUDA for whisper
 # device = "cuda" if torch.cuda.is_available() else "cpu"
-device = "cpu"
+device = "cuda"
 if device == "cuda":
     torch.cuda.init()
 print(f"Using device: {device}")
 
 # model loading
 print("loading model...")
-model_name = "tiny"
+model_name = "base"
 model = whisper.load_model(model_name).to(device)
 playsound("model_loaded.wav")
 print(f"{model_name} model loaded")

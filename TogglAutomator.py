@@ -3,6 +3,7 @@ import datetime
 import requests
 import threading
 import os
+import ctypes # popup dialog boxes
 import GitStatusChecker as git_checker
 from pytz import timezone
 
@@ -81,6 +82,20 @@ def human_readable_datetime():
     readable_datetime_format = "%B %d, %Y %I:%M %p EST"
     return datetime.datetime.now(EST).strftime(readable_datetime_format)
 
+# popup dialog box with 2 buttons
+def dialogue_window_yes_no(window_title, message, yes_txt, no_txt, timeout = -1):
+    # create the window
+    layout = [[sg.Text(message)], [sg.Button(yes_txt), sg.Button(no_txt)]]
+    window = sg.Window(window_title, layout)
+
+    # returns none when times out. timeout in ms.
+    event, values = window.read(timeout=timeout*1000) 
+    window.close()
+    
+    if event == yes_txt or event is None:
+        return True
+    return False
+
 ####################################################################################
 ################################  TOGGL API  #######################################
 ####################################################################################
@@ -104,7 +119,13 @@ if _debug_api: print(_response)
 def start_new_timer():
     """
     Starts a new timer in toggle that runs until we stop it.
+    User can accept or reject the timer.
     """
+    
+    # user accepts or rejects 
+    do_start = dialogue_window_yes_no ("Toggl Timer", "Starting timer!", "OK", "Don't", 10)
+    if not do_start:
+        return
     
     # set flag
     global _timer_running
@@ -134,14 +155,19 @@ def start_new_timer():
     # notify user
     print("STARTED new timer at: " + human_readable_datetime() + "...\n")
     play_notification_sound("C:\\Windows\\Media\\Speech On.wav")
-    os.system("msg * Timer started!")
     
 
 def stop_current_timer(auto = False, playsound = True, self = _toggl_api):
     """
     Stops the current running timer.
+    User can accept or reject the stoppage.
     """
     
+    # user accepts or rejects 
+    do_stop = dialogue_window_yes_no ("Toggl Timer", "Stopping timer!", "OK", "Don't", 10)
+    if not do_stop:
+        return
+
     # set flag
     global _timer_running
     _timer_running = False
@@ -168,11 +194,14 @@ def stop_current_timer(auto = False, playsound = True, self = _toggl_api):
     # String has been stripped of the last character, so we can use fromisoformat
     start_time = datetime.datetime.fromisoformat(start_time_str)
     
+    readable_datetime_format = "%B %d, %Y %I:%M %p EST"
     # If auto, set the stop time 20 mins before it was auto-stopped
     if auto: 
         stop_time = (datetime.datetime.utcnow() - datetime.timedelta(seconds=INACTIVITY_THRESHOLD))
     else: 
         stop_time = datetime.datetime.utcnow()
+
+    print("Timer stopped automatically at: " + stop_time.strftime(readable_datetime_format) + "...\n")
 
     # Attach timezone information to stop_time
     stop_time = stop_time.replace(tzinfo=timezone('UTC'))
@@ -180,6 +209,8 @@ def stop_current_timer(auto = False, playsound = True, self = _toggl_api):
     # Round times to nearest 5 minutes
     stop_time -= datetime.timedelta(minutes=stop_time.minute % 5, seconds=stop_time.second, microseconds=stop_time.microsecond)
     start_time -= datetime.timedelta(minutes=start_time.minute % 5, seconds=start_time.second, microseconds=start_time.microsecond)
+    
+    print("Adjusted stop tims: " + stop_time.strftime(readable_datetime_format) + "...\n")
 
     updated_data = {
         "time_entry": {

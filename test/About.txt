@@ -1,0 +1,1 @@
+Whisper Assistant is a Python-based voice assistant that converts spoken language to text, autocorrects it with OpenAI's GPT models, recognizes voice commands and statements with user-specified personas, and can interact with an active window's text using OCR and the clipboard.

@@ -63,7 +63,7 @@ def     ingest_files_to_llama(directory_path):
         print("...selected dir " + str(directory_path))
         required_exts = [".md", ".py", ".txt"]
 
-        reader = SimpleDirectoryReader(input_dir="C:/Git/voice-clone-bot/", required_exts = required_exts, recursive=True)
+        reader = SimpleDirectoryReader(input_dir="C:/Git/whisper-assistant/test", required_exts = required_exts, recursive=True)
     
     try:
         documents = reader.load_data()
@@ -83,6 +83,7 @@ def query_gpt(query):
     #    "service_context": "gpt-4",
     #}
     query_engine = index.as_query_engine(streaming=True) # , service_context=service_context) #(kwargs={'model': 'gpt-4'})
+    query_engine.api_key = os.getenv("OPENAI_API_KEY") # Set your OpenAI API key as an environment variable
     streaming_response = query_engine.query(query)
     streaming_response.print_response_stream()
 

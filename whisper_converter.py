@@ -3,9 +3,15 @@ import tkinter as tk
 import tkinter.filedialog as filedialog
 import threading
 import time
+import torch
+
+device = "cuda"
+if device == "cuda":
+    torch.cuda.init()
+print(f"Using device: {device}")
 
 print("loading model...")
-model_name = "tiny"
+model_name = "base"
 model = whisper.load_model(model_name)
 
 _done = False
