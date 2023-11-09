@@ -3,6 +3,10 @@ import pyautogui
 import numpy as np
 import time as Time
 
+#############################################
+# Automagically presses a keystroke when a certain volume threshold is reached
+#############################################
+
 button_pressed = False  # Flag to keep track of button state
 debounce_duration = 1.5  # Set your own debounce duration in seconds
 last_time = 0  # To keep track of the last time the audio callback was triggered

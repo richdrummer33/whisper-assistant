@@ -1,3 +1,5 @@
 ffmpeg.exe
 *test*.wav
 eleven-labs-responses/
+*.log
+test/
