@@ -5,6 +5,7 @@ import threading
 import os
 import ctypes # popup dialog boxes
 import GitStatusChecker as git_checker
+import PySimpleGUI as sg
 from pytz import timezone
 
 ####################################################################################

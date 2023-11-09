@@ -95,9 +95,9 @@ if device == "cuda":
     torch.cuda.init()
 print(f"Using device: {device}")
 
-# model loading
+# model loading 
 print("loading model...")
-model_name = "base"
+model_name = "medium.en"
 model = whisper.load_model(model_name).to(device)
 playsound("model_loaded.wav")
 print(f"{model_name} model loaded")

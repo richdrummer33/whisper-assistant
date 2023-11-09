@@ -3,43 +3,7 @@ import os
 import winsound
 import tkinter as tk
 import tkinter.filedialog as filedialog
-from llama_index import VectorStoreIndex, SimpleDirectoryReader, global_service_context
-
-# For openAI setup (service context)
-# REFERENCE: https://gpt-index.readthedocs.io/en/latest/core_modules/supporting_modules/service_context.html
-from llama_index import ServiceContext, LLMPredictor, OpenAIEmbedding, PromptHelper
-from llama_index.llms import OpenAI
-from llama_index.text_splitter import TokenTextSplitter
-from llama_index.node_parser import SimpleNodeParser
-
-# Initialize LlamaIndex and OpenAI
-openai.api_key = os.getenv("OPENAI_API_KEY") # Set your OpenAI API key as an environment variable
-
-llm = OpenAI(model='gpt-4', temperature=0, max_tokens=6800)
-embed_model = OpenAIEmbedding()
-node_parser = SimpleNodeParser.from_defaults(
-  text_splitter=TokenTextSplitter(chunk_size=1024, chunk_overlap=20)
-)
-
-# Helps with truncating and repacking text chunks to fit in the LLM's context window.
-prompt_helper = PromptHelper(
-  context_window=4096,
-  num_output=256,
-  chunk_overlap_ratio=0.1,
-  chunk_size_limit=None
-)
-
-# LLM Config for llama
-service_context = ServiceContext.from_defaults(
-  llm=llm,
-  embed_model=embed_model,
-  node_parser=node_parser,
-  prompt_helper=prompt_helper
-)
-
-from llama_index import set_global_service_context
-set_global_service_context(service_context)
-print("Config set!")
+from llama_index import VectorStoreIndex, SimpleDirectoryReader, global_service_context, PromptHelper, LLMPredictor
 
 ###########################################
 ##############################################################################################################
@@ -51,14 +15,16 @@ print("Config set!")
 ##############################################################################################################
 ###########################################
 
-index = None
-
 # enum for warnign or success sfx notification
 class NotificationType:
     WARNING = "C:\\Windows\\Media\\Windows Exclamation.wav"
     SUCCESS = "C:\\Windows\\Media\\Speech On.wav"
 
-
+# 1. Initialize LlamaIndex and OpenAI
+openai.api_key = os.getenv("OPENAI_API_KEY") # Set your OpenAI API key as an environment variable
+index = None
+#llm_predictor = LLMPredictor(llm=openai(temperature=0.7, model_name="gpt-3.5-turbo", max_tokens=8192))
+# service_context = ServiceContext.from_defaults(llm_predictor=llm_predictor)
 
 def play_notification_sound(notification_type):
     if notification_type == NotificationType.WARNING:
@@ -104,12 +70,13 @@ def ingest_files_to_llama(directory_path):
         documents = reader.load_data()
 
         print("Data Loaded! Indexing...")
+        service_context = ServiceContext.from_defaults(chunk_size=512)
         index = VectorStoreIndex.from_documents(
                 documents,
                 service_context=service_context,
                 show_progress=True
             )
-            
+
         # index.storage_context.persist() # save to disk
         print("...successfully ingested files into LlamaIndex!")
         play_notification_sound(NotificationType.SUCCESS)
