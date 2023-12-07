@@ -96,8 +96,8 @@ if device == "cuda":
 print(f"Using device: {device}")
 
 # model loading 
-print("loading model...")
-model_name = "medium.en"
+model_name = "small.en"
+print("loading model " + model_name + "...")
 model = whisper.load_model(model_name).to(device)
 playsound("model_loaded.wav")
 print(f"{model_name} model loaded")
@@ -744,7 +744,7 @@ COMBINATIONS = [
             # {keyboard.Key.ctrl ,keyboard.Key.shift, keyboard.KeyCode(char="R")},
             # tilda key
             # { keyboard.Key.f11 },
-            { keyboard.Key.alt_l, keyboard.KeyCode(char="m")}
+            { keyboard.Key.alt_l, keyboard.KeyCode(char="q")}
         ],
         "command": "start record",
     },

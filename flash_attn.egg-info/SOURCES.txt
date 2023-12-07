@@ -1,0 +1,7 @@
+LICENSE
+README.md
+flash_attn.egg-info/PKG-INFO
+flash_attn.egg-info/SOURCES.txt
+flash_attn.egg-info/dependency_links.txt
+flash_attn.egg-info/requires.txt
+flash_attn.egg-info/top_level.txt

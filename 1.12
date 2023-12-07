@@ -1,0 +1,1867 @@
+Collecting package metadata (current_repodata.json): ...working... done
+Solving environment: ...working... done
+
+## Package Plan ##
+
+  environment location: C:\Users\richd\.conda\envs\speech-to-text
+
+  added / updated specs:
+    - cudatoolkit=11.8
+    - pytorch
+    - torchaudio
+    - torchvision
+
+
+The following packages will be downloaded:
+
+    package                    |            build
+    ---------------------------|-----------------
+    filelock-3.13.1            |   py39haa95532_0          21 KB
+    gmpy2-2.1.2                |   py39h7f96b67_0         160 KB
+    intel-openmp-2023.1.0      |   h59b6b97_46320         2.7 MB
+    mkl-2023.1.0               |   h6b88ed4_46358       155.9 MB
+    mkl-service-2.4.0          |   py39h2bbff1b_1          45 KB
+    mkl_fft-1.3.8              |   py39h2bbff1b_0         169 KB
+    mkl_random-1.2.4           |   py39h59b6b97_0         228 KB
+    mpc-1.1.0                  |       h7edee0f_1         260 KB
+    mpfr-4.0.2                 |       h62dcd97_1         1.5 MB
+    mpir-3.0.0                 |       hec2e145_1         1.3 MB
+    mpmath-1.3.0               |   py39haa95532_0         828 KB
+    networkx-3.1               |   py39haa95532_0         2.7 MB
+    numpy-1.26.2               |   py39h055cbcc_0          11 KB
+    numpy-base-1.26.2          |   py39h65a83cf_0         6.1 MB
+    openjpeg-2.4.0             |       h4fc8c34_0         219 KB
+    pillow-10.0.1              |   py39h045eedc_0         781 KB
+    pip-23.3.1                 |   py39haa95532_0         2.8 MB
+    pytorch-2.1.1              |      py3.9_cpu_0       163.1 MB  pytorch
+    sympy-1.12                 |   py39haa95532_0        10.5 MB
+    torchaudio-2.1.1           |         py39_cpu         5.6 MB  pytorch
+    torchvision-0.16.1         |         py39_cpu         6.4 MB  pytorch
+    ------------------------------------------------------------
+                                           Total:       361.4 MB
+
+The following NEW packages will be INSTALLED:
+
+  blas               pkgs/main/win-64::blas-1.0-mkl 
+  brotli-python      pkgs/main/win-64::brotli-python-1.0.9-py39hd77b12b_7 
+  certifi            pkgs/main/win-64::certifi-2023.11.17-py39haa95532_0 
+  cffi               pkgs/main/win-64::cffi-1.16.0-py39h2bbff1b_0 
+  charset-normalizer pkgs/main/noarch::charset-normalizer-2.0.4-pyhd3eb1b0_0 
+  cryptography       pkgs/main/win-64::cryptography-41.0.3-py39h89fc84f_0 
+  cudatoolkit        pkgs/main/win-64::cudatoolkit-11.8.0-hd77b12b_0 
+  filelock           pkgs/main/win-64::filelock-3.13.1-py39haa95532_0 
+  freetype           pkgs/main/win-64::freetype-2.12.1-ha860e81_0 
+  giflib             pkgs/main/win-64::giflib-5.2.1-h8cc25b3_3 
+  gmpy2              pkgs/main/win-64::gmpy2-2.1.2-py39h7f96b67_0 
+  idna               pkgs/main/win-64::idna-3.4-py39haa95532_0 
+  intel-openmp       pkgs/main/win-64::intel-openmp-2023.1.0-h59b6b97_46320 
+  jinja2             pkgs/main/win-64::jinja2-3.1.2-py39haa95532_0 
+  jpeg               pkgs/main/win-64::jpeg-9e-h2bbff1b_1 
+  lerc               pkgs/main/win-64::lerc-3.0-hd77b12b_0 
+  libdeflate         pkgs/main/win-64::libdeflate-1.17-h2bbff1b_1 
+  libjpeg-turbo      pkgs/main/win-64::libjpeg-turbo-2.0.0-h196d8e1_0 
+  libpng             pkgs/main/win-64::libpng-1.6.39-h8cc25b3_0 
+  libtiff            pkgs/main/win-64::libtiff-4.5.1-hd77b12b_0 
+  libuv              pkgs/main/win-64::libuv-1.44.2-h2bbff1b_0 
+  libwebp            pkgs/main/win-64::libwebp-1.3.2-hbc33d0d_0 
+  libwebp-base       pkgs/main/win-64::libwebp-base-1.3.2-h2bbff1b_0 
+  lz4-c              pkgs/main/win-64::lz4-c-1.9.4-h2bbff1b_0 
+  markupsafe         pkgs/main/win-64::markupsafe-2.1.1-py39h2bbff1b_0 
+  mkl                pkgs/main/win-64::mkl-2023.1.0-h6b88ed4_46358 
+  mkl-service        pkgs/main/win-64::mkl-service-2.4.0-py39h2bbff1b_1 
+  mkl_fft            pkgs/main/win-64::mkl_fft-1.3.8-py39h2bbff1b_0 
+  mkl_random         pkgs/main/win-64::mkl_random-1.2.4-py39h59b6b97_0 
+  mpc                pkgs/main/win-64::mpc-1.1.0-h7edee0f_1 
+  mpfr               pkgs/main/win-64::mpfr-4.0.2-h62dcd97_1 
+  mpir               pkgs/main/win-64::mpir-3.0.0-hec2e145_1 
+  mpmath             pkgs/main/win-64::mpmath-1.3.0-py39haa95532_0 
+  networkx           pkgs/main/win-64::networkx-3.1-py39haa95532_0 
+  numpy              pkgs/main/win-64::numpy-1.26.2-py39h055cbcc_0 
+  numpy-base         pkgs/main/win-64::numpy-base-1.26.2-py39h65a83cf_0 
+  openjpeg           pkgs/main/win-64::openjpeg-2.4.0-h4fc8c34_0 
+  pillow             pkgs/main/win-64::pillow-10.0.1-py39h045eedc_0 
+  pip                pkgs/main/win-64::pip-23.3.1-py39haa95532_0 
+  pycparser          pkgs/main/noarch::pycparser-2.21-pyhd3eb1b0_0 
+  pyopenssl          pkgs/main/win-64::pyopenssl-23.2.0-py39haa95532_0 
+  pysocks            pkgs/main/win-64::pysocks-1.7.1-py39haa95532_0 
+  pytorch            pytorch/win-64::pytorch-2.1.1-py3.9_cpu_0 
+  pytorch-mutex      pytorch/noarch::pytorch-mutex-1.0-cpu 
+  pyyaml             pkgs/main/win-64::pyyaml-6.0.1-py39h2bbff1b_0 
+  requests           pkgs/main/win-64::requests-2.31.0-py39haa95532_0 
+  setuptools         pkgs/main/win-64::setuptools-68.0.0-py39haa95532_0 
+  sympy              pkgs/main/win-64::sympy-1.12-py39haa95532_0 
+  tbb                pkgs/main/win-64::tbb-2021.8.0-h59b6b97_0 
+  tk                 pkgs/main/win-64::tk-8.6.12-h2bbff1b_0 
+  torchaudio         pytorch/win-64::torchaudio-2.1.1-py39_cpu 
+  torchvision        pytorch/win-64::torchvision-0.16.1-py39_cpu 
+  urllib3            pkgs/main/win-64::urllib3-1.26.18-py39haa95532_0 
+  wheel              pkgs/main/win-64::wheel-0.41.2-py39haa95532_0 
+  win_inet_pton      pkgs/main/win-64::win_inet_pton-1.1.0-py39haa95532_0 
+  xz                 pkgs/main/win-64::xz-5.4.2-h8cc25b3_0 
+  yaml               pkgs/main/win-64::yaml-0.2.5-he774522_0 
+  zlib               pkgs/main/win-64::zlib-1.2.13-h8cc25b3_0 
+  zstd               pkgs/main/win-64::zstd-1.5.5-hd43e919_0 
+
+
+Proceed ([y]/n)? 
+
+Downloading and Extracting Packages
+numpy-base-1.26.2    | 6.1 MB    |            |   0% 
+networkx-3.1         | 2.7 MB    |            |   0% [A
+
+pillow-10.0.1        | 781 KB    |            |   0% [A[A
+
+
+sympy-1.12           | 10.5 MB   |            |   0% [A[A[A
+
+
+
+torchaudio-2.1.1     | 5.6 MB    |            |   0% [A[A[A[A
+
+
+
+
+mpir-3.0.0           | 1.3 MB    |            |   0% [A[A[A[A[A
+
+
+
+
+
+mpfr-4.0.2           | 1.5 MB    |            |   0% [A[A[A[A[A[A
+
+
+
+
+
+
+mpmath-1.3.0         | 828 KB    |            |   0% [A[A[A[A[A[A[A
+
+
+
+
+
+
+
+torchvision-0.16.1   | 6.4 MB    |            |   0% [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+mkl-service-2.4.0    | 45 KB     |            |   0% [A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+pip-23.3.1           | 2.8 MB    |            |   0% [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  |            |   0% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+mkl_random-1.2.4     | 228 KB    |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+filelock-3.13.1      | 21 KB     |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl_fft-1.3.8        | 169 KB    |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mpc-1.1.0            | 260 KB    |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+numpy-1.26.2         | 11 KB     |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+gmpy2-2.1.2          | 160 KB    |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+networkx-3.1         | 2.7 MB    | 8          |   8% [A
+
+
+sympy-1.12           | 10.5 MB   | 1          |   2% [A[A[A
+
+pillow-10.0.1        | 781 KB    | 2          |   2% [A[Anumpy-base-1.26.2    | 6.1 MB    |            |   0% 
+
+
+
+torchaudio-2.1.1     | 5.6 MB    |            |   0% [A[A[A[A
+
+
+sympy-1.12           | 10.5 MB   | #9         |  20% [A[A[A
+
+
+
+
+mpir-3.0.0           | 1.3 MB    | 1          |   1% [A[A[A[A[Anumpy-base-1.26.2    | 6.1 MB    | 9          |  10% 
+
+
+
+
+
+mpfr-4.0.2           | 1.5 MB    | 1          |   1% [A[A[A[A[A[A
+
+
+
+torchaudio-2.1.1     | 5.6 MB    | #4         |  14% [A[A[A[A
+
+
+sympy-1.12           | 10.5 MB   | ####5      |  46% [A[A[A
+
+
+
+
+
+
+mpmath-1.3.0         | 828 KB    | 1          |   2% [A[A[A[A[A[A[Anumpy-base-1.26.2    | 6.1 MB    | ##8        |  28% 
+
+
+
+torchaudio-2.1.1     | 5.6 MB    | ###7       |  37% [A[A[A[A
+
+
+
+
+
+
+
+
+mkl-service-2.4.0    | 45 KB     | ###5       |  36% [A[A[A[A[A[A[A[A[A
+
+
+sympy-1.12           | 10.5 MB   | #########7 |  98% [A[A[A
+
+
+
+
+mpir-3.0.0           | 1.3 MB    | ########## | 100% [A[A[A[A[A
+
+
+
+
+mpir-3.0.0           | 1.3 MB    | ########## | 100% [A[A[A[A[A
+
+
+
+
+
+
+
+
+
+pip-23.3.1           | 2.8 MB    |            |   1% [A[A[A[A[A[A[A[A[A[A
+
+
+
+torchaudio-2.1.1     | 5.6 MB    | #######6   |  77% [A[A[A[A
+
+
+
+
+
+
+
+torchvision-0.16.1   | 6.4 MB    |            |   0% [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+mkl_random-1.2.4     | 228 KB    | 7          |   7% [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+filelock-3.13.1      | 21 KB     | #######5   |  75% [A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl_fft-1.3.8        | 169 KB    | 9          |   9% [A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+mpfr-4.0.2           | 1.5 MB    | ########## | 100% [A[A[A[A[A[A
+
+
+
+
+
+mpfr-4.0.2           | 1.5 MB    | ########## | 100% [A[A[A[A[A[A
+
+
+
+
+
+
+
+torchvision-0.16.1   | 6.4 MB    | ##4        |  25% [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  |            |   0% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+numpy-1.26.2         | 11 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+torchvision-0.16.1   | 6.4 MB    | ########3  |  84% [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+gmpy2-2.1.2          | 160 KB    | #          |  10% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | 2          |   2% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mpc-1.1.0            | 260 KB    | 6          |   6% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  |            |   0% [A[A[A[A[A[A[A[A[A[A[A
+
+pillow-10.0.1        | 781 KB    | ########## | 100% [A[A
+
+pillow-10.0.1        | 781 KB    | ########## | 100% [A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | 7          |   7% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | 2          |   2% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | 3          |   3% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | #          |  10% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | #3         |  13% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | 4          |   5% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+mpmath-1.3.0         | 828 KB    | ########## | 100% [A[A[A[A[A[A[A
+
+
+
+
+
+
+mpmath-1.3.0         | 828 KB    | ########## | 100% [A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | #9         |  19% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | 8          |   8% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | ##3        |  23% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | 9          |   9% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | #1         |  12% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | ##7        |  27% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | ###2       |  33% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | #5         |  15% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | ###7       |  37% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | #8         |  19% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | ####1      |  41% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | ##         |  21% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | ####4      |  45% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | ##3        |  23% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | ####9      |  50% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | ##6        |  27% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | #####3     |  53% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | ##9        |  29% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | #####7     |  57% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | ###3       |  33% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | ######3    |  63% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | ###5       |  36% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | ######7    |  67% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | ###8       |  39% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | ####1      |  41% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | #######1   |  71% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | ####4      |  44% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | #######4   |  75% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | ####7      |  48% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | #######8   |  78% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | #####      |  50% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | ########1  |  82% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | #####3     |  53% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | ########5  |  85% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | #####6     |  56% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | ########8  |  89% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | #####9     |  59% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | #########2 |  92% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | #########5 |  96% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | ######2    |  62% [A[A[A[A[A[A[A[A[A[A[A
+networkx-3.1         | 2.7 MB    | ########## | 100% [A
+networkx-3.1         | 2.7 MB    | ########## | 100% [A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | #########9 | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+mkl-service-2.4.0    | 45 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+mkl-service-2.4.0    | 45 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | ######6    |  66% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+mkl_random-1.2.4     | 228 KB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+mkl_random-1.2.4     | 228 KB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | ######9    |  69% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | #######3   |  73% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | #######6   |  76% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | ########   |  80% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | ########4  |  84% [A[A[A[A[A[A[A[A[A[A[Anumpy-base-1.26.2    | 6.1 MB    | ########## | 100% numpy-base-1.26.2    | 6.1 MB    | ########## | 100% 
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | ########7  |  88% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | #########1 |  92% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | #########6 |  96% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+pip-23.3.1           | 2.8 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+pip-23.3.1           | 2.8 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+filelock-3.13.1      | 21 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+filelock-3.13.1      | 21 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl_fft-1.3.8        | 169 KB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl_fft-1.3.8        | 169 KB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+numpy-1.26.2         | 11 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+gmpy2-2.1.2          | 160 KB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+gmpy2-2.1.2          | 160 KB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mpc-1.1.0            | 260 KB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mpc-1.1.0            | 260 KB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+torchaudio-2.1.1     | 5.6 MB    | ########## | 100% [A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+sympy-1.12           | 10.5 MB   | ########## | 100% [A[A[A
+
+
+
+
+
+
+
+torchvision-0.16.1   | 6.4 MB    | ########## | 100% [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mkl-2023.1.0         | 155.9 MB  | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+pytorch-2.1.1        | 163.1 MB  | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                      [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A                                                     
+                                                     [A
+
+                                                     [A[A
+
+
+                                                     [A[A[A
+
+
+
+                                                     [A[A[A[A
+
+
+
+
+                                                     [A[A[A[A[A
+
+
+
+
+
+                                                     [A[A[A[A[A[A
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+[A
+Preparing transaction: ...working... done
+Verifying transaction: ...working... done
+Executing transaction: ...working... done

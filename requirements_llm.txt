@@ -1,0 +1,6 @@
+openai-whisper
+pyaudio
+wave
+torch
+pynput
+PyQt5
