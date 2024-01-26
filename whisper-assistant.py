@@ -1,3 +1,5 @@
+#region SETUP
+
 import codecs
 import whisper
 import time
@@ -12,16 +14,17 @@ import time
 import string
 import shutil
 import torch
-# import OcrWindowsAutomation as winauto
+import warnings
+import numpy as np
 import pandas as pd
-from pynput import keyboard
 import keyboard as kb
+from pynput import keyboard
 from playsound import playsound
 from datetime import datetime
 from PyQt5.QtMultimedia import QAudioDeviceInfo
 from elevenlabslib import *
 from elevenlabslib import helpers
-import warnings
+# import OcrWindowsAutomation as winauto
 
 
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -125,10 +128,13 @@ pykeyboard= keyboard.Controller()
 ### Image captioning to text: https://github.com/ttengwang/Caption-Anything
 ########
 
+#endregion
 
-###########################################################################################################
-################################ initial setup and environment variables ###################################
-###########################################################################################################
+##############################################
+################ OPENAI SETUP ################
+##############################################
+#region OPENAI
+
 import os
 import subprocess
 
@@ -268,42 +274,12 @@ def initial_setup_check():
               + "Create another variable with the name OPENAI_ORG and the set the value as to your organization ID (e.g. org-1a2b3c4d5e)\n."
               + '\033[0m', file=sys.stderr)
         return
-    
 
-###########################################################################################################
-################################ speech synthesis by eleven labs ##########################################
-###########################################################################################################
-def play_voice(text=""):
-    user = ElevenLabsUser(os.getenv("ELEVEN_LABS_API_KEY"))
-    voice = user.get_voices_by_name(_elevenLabsVoice)[0]  # This is a list because multiple voices can have the same name
-    
-    # if there are angle brackets, then trim the text to the text within the brackets
-    if("<" in text and ">" in text):
-        text = text[text.find("<")+1:text.find(">")]
-    # else just trim the text to the first sentence
-    #else:
-     #   text = text.split(".")[0]
-    
-    # STREAMING VERSION: voice.generate_stream_audio_v2(text, playbackOptions=PlaybackOptions(runInBackground=True))
-    audioData, historyID, outputStream = voice.generate_play_audio_v2(text, playbackOptions=PlaybackOptions(runInBackground=True))
-    
-    # get reg value and save the audio to a file with the incremented number
-    file_number = get_registry_value("AudioFileIndex")
-    helpers.save_audio_bytes(audioData, "eleven-labs-responses/" + str(file_number) + "_theirs.wav", "wav")
-    
-    # save an "after" screenshot for record keeping
-    screenshot = get_chat_window_screenshot_pysseract()
-    cv2.imwrite("eleven-labs-responses/" + str(file_number) + "_response.png", screenshot)
-
-    for historyItem in user.get_history_items_paginated():
-        if historyItem.text == text:
-            # The first items are the newest, so we can stop as soon as we find one.
-            historyItem.delete()
-            break
-        
-###########################################################################################################
-################################ main speech recognition and transcription ################################
-###########################################################################################################
+#endregion
+ 
+#########################################################
+####### main speech recognition and transcription #######
+#########################################################
 def transcribe_speech():
     global file_ready_counter
     global device
@@ -337,43 +313,48 @@ def transcribe_speech():
         # remove all punctuation from the corrected_dialogue for checking if any of the 1st 3 words is the pseudonym (sometimes there is a comma or period before/after the pseudonym)
         translator = str.maketrans('', '', string.punctuation) # Create a translation table that maps every punctuation character to None
         transcript = transcript.translate(translator)
-            
-        ##################################################################
-        ####### REGULAR SPEECH-TO-TEXT TRANSCRIPTION (AUTO-TYPING) #######
-        ##################################################################
-        if(_debug):
-            print ("(info) Transcribing speech. No GPT query.")
         
-        # if starts with 'git' then remove trailing period if it exists
+        # IF GIT COMMAND: Remove trailing period if starts with 'git'
         if(transcript.lower().startswith("git")):   
             print ("[git command]")
             transcript = transcript.rstrip(".")
 
-        # if is not a full sentence, then remove any trailing periods
+        # IF NOT FULL SENTENCE: Remove any trailing periods
         if(len(transcript) < 25):
             transcript = transcript.rstrip(".")
         
+        # FINALLY: Type it out!
         for char in transcript:
             try:
-                # Cancel hotkey 
-                if kb.is_pressed('alt') and kb.is_pressed('w'): break
-                # type it out!
+                # Cancel hotkey
+                if kb.is_pressed('alt') and kb.is_pressed('w'): 
+                    break
+
+                # Keystroke
                 pykeyboard.type(char)
                 time.sleep(0.01)
+                
             except Exception as e:
                 print("empty or unknown symbol" + e)    
                     
+        # Done!
+        # Delete the file
         os.remove("test"+str(i)+".wav")
         i=i+1
 
-        
-import numpy as np
+#########################################################
+##################### Extra features ####################
+#########################################################
+#region EXTRAS
+
 import pygetwindow as gw
 import pyautogui
 import cv2
-# install cv2 by running: pip install opencv-python
 import pytesseract
 
+############################
+### OCR Text from Window ###
+############################
 # returns an image of the active window
 def get_chat_window_screenshot_pysseract():
     # Get the list of all windows with 'whisper' in their title
@@ -394,9 +375,6 @@ def get_chat_window_screenshot_pysseract():
     # If no suitable window was found, return None
     return None
 
-############################################################################################################
-##################################### OCR Text from Active Window ##########################################
-############################################################################################################
 # returns the text from the active window and stores the OCR dataframe for later access by auto gui feature (mouse movements, etc.)
 def get_window_text_ocr_pysseract():
     # Get the active window
@@ -427,9 +405,9 @@ def get_window_text_ocr_pysseract():
         
         return ocr_prompt
 
-###########################################################################################################
-##################################### Auto Mouse Movement #################################################
-###########################################################################################################
+###########################
+### Auto Mouse Movement ###
+###########################
 def instruct_mouse_movement(ocr_df, target_text, deviation=50, speed=5):
     '''
     Instructs the mouse to move to the location of the given target text.
@@ -529,9 +507,6 @@ def gpt_gui_actions():
 
     print(response)
 
-        
-
-
 # [FYI] gpt models: https://platform.openai.com/docs/guides/gpt
 def query_gpt_chat(query="", windowText = "", playVoice = False):
     parameters = {
@@ -598,22 +573,6 @@ def query_gpt_autocorrect(string="", improveWriting = False):
                 "\n\t3. Prepend '@' to names Bela, Dylan, Ollie, Kenny, and Graham (e.g., @Bela).",
                 "\n\t4. If I say the word '" + _pseudonym + "', it's someone's name and should not be changed."
             ])
-            # ...concise version of this:
-            #"Your ONLY role is to provide corrections to transcriptions generated by an Automatic Speech Recognition (ASR) AI. DO NOT generate responses or provide answers to any content in the transcriptions. Your task is limited to identifying and correcting mistakes in the transcriptions. \nYour job description:"
-            #+ "\n\t1. Rectify inaccuracies where the ASR AI seems to ahve misinterpreted spoken words with similar sounding words."
-            #+ "\n\t2. Make necessary grammatical corrections, especially in cases of run-on sentences and punctuation. It's important to maintain my speech style, so use a minimalistic approach."
-            #+ "\n\t2. Make necessary formatting corrections. E.g. You can use paragraph formatting, indented point notes - whatever you think it would enhance the content."
-            #+ "\n\t3. If the text is correct and does not need any modifications, just return the text as is."
-            #+ "\nExample: If the text reads 'yo, how are you doing?' do not modify it to 'hello, how are you doing'; keep the word 'yo'. "
-            #+ "An inverse example: If the text reads 'Below, how are you doing' then 'Hello, how are you doing?' was probably what I said and can be corrected as such. "
-            #+ "\n\nNotes: "
-            #+ "\n\t1: I often discuss programming, particularly in C-Sharp or Python, and frequently ask questions related to the Unity engine, since I'm a developer. "
-            #+ "In such cases, I'll often use technical jargon like: '...interface called I in it statics...' which I'd intend to be: '...interface called IInitStatics...'. "
-            #+ "I'll also use video game words such as (for example) 'reticle', which is often misinterpreted as 'radical'."
-            #+ "I'll also say things that start with the word 'git', which can be translated to a git command. E.g. When I say 'Git add all', that means 'git add -A' (note: git must have a lowercase g). "
-            #+ "Don't convert these into non-technical language. Instead, try to predict what they should be in the given context when the context appears programming related. "
-            #+ "If I say the person's names Bela (often misenterpreted as Bella), Dylan, Ollie, Kenny, Graham, then put an @ symbol in front like: @Bela."
-            #+ "\n\t 2: I may say the word '" + _pseudonym + "' in the sentence (this is someone's name). This word (name) is intentional and should not be changed. "
         },
             {"role": "user", "content": string}
         ]
@@ -655,10 +614,12 @@ COMBINATIONS = [
         "command": "start record",
     },
 ]
+#endregion
 
-########################################################################
-######################## record audio ##################################
-########################################################################
+#########################################################
+################## record audio #########################
+#########################################################
+#region RECORD
 
 def get_max_channels():
     audio_info = QAudioDeviceInfo.defaultInputDevice()  # or QAudioDeviceInfo.defaultOutputDevice()
@@ -667,15 +628,14 @@ def get_max_channels():
     print("Max channels:", max_channels)
     return max_channels
 
+def play_beep_async():
+    t3 = threading.Thread(target=async_recorder_timeout_beeper)
+    t3.start()
+
 # PLAY SOUND for final N seconds of recording, e.g. 3 seconds (defined in async_record_speech function)
 do_countdown_beep = False
 def async_recorder_timeout_beeper():
-    global do_countdown_beep 
-
-    if do_countdown_beep:
-        playsound("beep.wav")
-        do_countdown_beep = False
-
+    playsound("beep.wav")
 
 # RECORD AUDIO
 def async_record_speech():
@@ -712,7 +672,7 @@ def async_record_speech():
     playsound("on.wav")
 
     # Params to limit recording duration to prevent lockups
-    max_duration = 40                           # duration your allowed to record
+    max_duration = 60                           # duration your allowed to record
     tick_counter = 3                            # for the last "tick_counter" seconds, beep every second
     start_time = time.time()                    # get current time
     rec_time_limit = start_time + max_duration    # time limit for recording
@@ -726,6 +686,7 @@ def async_record_speech():
         # beep every second for the last "tick_counter" seconds (played via async_record_speech function)
         time_remaining = rec_time_limit - time.time()
         if (time_remaining < tick_counter and tick_counter > 0):
+            play_beep_async()
             tick_counter -= 1           # decrement the tick counter
             do_countdown_beep = True    # async_record_speech will play the beep!
 
@@ -754,8 +715,10 @@ def async_record_speech():
     stop_recording=False
     is_recording=False
 
-#------------
+#endregion
 
+#region MAIN
+    
 # RB startup things
 initial_setup_check()
 # timer_thread = threading.Thread(breaktimer.start_timer(query_gpt_chat("Hey Snoop, tell me in one sentence that it is time for me to take a break (I'm working).", "", playVoice=True)))
@@ -764,9 +727,6 @@ initial_setup_check()
 # transcribe speech in infinte loop
 t2 = threading.Thread(target=transcribe_speech)
 t2.start()
-
-t3 = threading.Thread(target=async_recorder_timeout_beeper)
-t3.start()
 
 # hot key events
 def on_press(key):
@@ -797,3 +757,5 @@ def do_record():
 
 with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
     listener.join()
+
+#endregion
