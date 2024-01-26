@@ -14,7 +14,7 @@ from pynput import keyboard
 from datetime import datetime
 from PyQt5.QtMultimedia import QAudioDeviceInfo
 import warnings
-
+from playsound import playsound
 
 # >>> NOTE NOTE NOTE >>>
 # CONDA CMD FOR INSANELY-FAST-WHISPER:
@@ -96,12 +96,7 @@ import warnings
 # • Cave Johnson's assistant's assistant
 # • Cave Johnson's assistant's assistant's assistant
 
-# GPU CUDA for whisper
-# device = "cuda" if torch.cuda.is_available() else "cpu"
-device = "cuda"
-if device == "cuda":
-    torch.cuda.init()
-print(f"Using device: {device}")
+
 
 #################
 
@@ -125,25 +120,20 @@ model = None
 pipe = None
 audio_data = None
 
+# GPU CUDA for whisper
+# device = "cuda" if torch.cuda.is_available() else "cpu"
+device = "cpu" # "cuda"
+if device == "cuda":
+    torch.cuda.init()
+print(f"Using device: {device}")
+
 # NOTE REF: https://github.com/Vaibhavs10/insanely-fast-whisper
 # insanely fast whisper
-try:
-    from transformers import pipeline
-    print(f"Loading {model_name} for insanely-fast-whisper with pipeline...")
-    pipe = pipeline(
-        "automatic-speech-recognition",
-        model="D:\\Data\\LLM-models\\whisper\\whisper-large-v3", # "openai/whisper-medium.en",
-        torch_dtype=torch.float16,
-        device="cuda", # or mps for Mac devices
-        model_kwargs={"use_flash_attention_2": True}, # set to False for old GPUs
-    )
-except Exception as e:
-    print(e)
-    print(f"\nPipeline error. Loading {model_name} with whisper api instead...")
-    model = whisper.load_model(model_name).to(device)
-    print(f"{model_name} model loaded!")
-
-print(f"Insanely-fast-whisper done {model_name}!")
+model_name = "small.en"
+print("loading model " + model_name + "...")
+model = whisper.load_model(model_name).to(device)
+playsound("model_loaded.wav")
+print(f"{model_name} model loaded")
 
 # global variables
 _fullName = "Mr Bean"
@@ -207,7 +197,7 @@ def transcribe_speech(): # callbacks can eb methods outside this function, which
     global audio_data
 
     i=1
-    correct_dialogue = ""
+    # correct_dialogue = ""
     print("ready - start transcribing by pressing Alt-M ...\n")
     
     while True:
@@ -216,85 +206,17 @@ def transcribe_speech(): # callbacks can eb methods outside this function, which
             time.sleep(0.01)
 
         # transcribe speech
-        # with torch.cuda.device(device):
-        if model is not None:
-            result = model.transcribe(torch.from_numpy(audio_data), language = "en", fp16=False)# "test"+str(i)+".wav") # before "insanely fast whisper"
+        if model is not None and not is_recording:
+            result = model.transcribe("test"+str(i)+".wav") # insanely fast whisper: torch.from_numpy(audio_data), language = "en", fp16=False)# "test"+str(i)+".wav") # before "insanely fast whisper"
 
-        # insanely fast whisper
-        elif pipe is not None:
-            raw_transcript = pipe("test"+str(i)+".wav", 
-                chunk_length_s=30,
-                batch_size=24,
-                return_timestamps=True)
-
-        print('\033[96m' + "\n?RAW TRANSCRIPTION?:\n" + raw_transcript + '\033[0m', file=sys.stderr)
+        # transcribe speech
+        result = model.transcribe("test"+str(i)+".wav")
         raw_transcript = result["text"].strip()
         print('\033[96m' + "\nRAW TRANSCRIPTION:\n" + raw_transcript + '\033[0m', file=sys.stderr)
         
-        # if "computer" or "computer." is the last string, remove it (voice attack)
-        raw_transcript.strip("computer")
-        raw_transcript.strip("computer.")
-        
-        # autocorrect feature
         corrected_dialogue = raw_transcript
-        
-        # try:
-        #     corrected_dialogue = query_gpt_autocorrect(raw_transcript)
-        #     print('\033[38;5;208m' + "\nCORRECTED TRANSCRIPTION:\n " + corrected_dialogue + '\033[0m', file=sys.stderr)
-        #     _hasKey = True
-        # except:
-        #     pass
-        
         corrected_dialogue = corrected_dialogue.strip() # remove leading and trailing spaces
         corrected_dialogue = corrected_dialogue.lstrip(".,:;!?") # removing any leading punctuation and spaces
-        
-        # saves a record of the transcription to a log file to folder in appdata
-        save_to_logfile(corrected_dialogue)
-        
-        # if the 1st word spoken is close to the pseudonym, then run a GPT query and overwrite the result
-        similarity = 0
-        
-        # remove all punctuation from the corrected_dialogue for checking if any of the 1st 3 words is the pseudonym (sometimes there is a comma or period before/after the pseudonym)
-        translator = str.maketrans('', '', string.punctuation) # Create a translation table that maps every punctuation character to None
-        raw_transcript = corrected_dialogue.translate(translator)
-        firstWords = raw_transcript.lower().strip().split(" ")[:3]
-        isAQuery                = any(word.lower() == _pseudonym.lower() for word in firstWords) or similarity > 80
-        isAnImprovementRequest  = any(word.lower() == _improveKwd.lower() for word in firstWords)
-        if(_debug): 
-            print ("(info) Is a query: " + str(isAQuery) + "\n(info) Has key: " + str(_hasKey))
-            
-        ##################################################################
-        ####### REGULAR SPEECH-TO-TEXT TRANSCRIPTION (AUTO-TYPING) #######
-        ##################################################################
-        if True: 
-            #if(_debug):
-            print ("(info) Transcribing speech. No GPT query.")
-            
-            # remove leading + trailing spaces and leading punctuation 
-            corrected_dialogue = corrected_dialogue.strip() 
-            corrected_dialogue = corrected_dialogue.lstrip(".,:;!?")    
-
-            # GPT query to correct the text
-            # corrected_dialogue = query_gpt_autocorrect(corrected_dialogue, True)
-            # print('\033[95m' + "\n" + _pseudonym + " says:\n" + corrected_dialogue + '\033[0m', file=sys.stderr)
-
-            # if starts with 'git' then remove trailing period if it exists
-            if(corrected_dialogue.lower().startswith("git")):   
-                print ("[git command]")
-                corrected_dialogue = corrected_dialogue.rstrip(".")
-            # if is not a full sentence, then remove any trailing periods
-            if(len(corrected_dialogue) < 25):
-                corrected_dialogue = corrected_dialogue.rstrip(".")
-            
-            for char in corrected_dialogue:
-                try:
-                    pykeyboard.type(char)
-                    time.sleep(0.01)
-                except Exception as e:
-                    print("empty or unknown symbol" + e)  
-            
-            # Text streams onto the terminal window
-            # corrected_dialogue = mistral.generate_output(prompt=corrected_dialogue) 
         
         os.remove("test"+str(i)+".wav")
         i=i+1
@@ -303,19 +225,6 @@ def transcribe_speech(): # callbacks can eb methods outside this function, which
         _transcribed_text = corrected_dialogue
         _transcribed_text_to_send = corrected_dialogue
         
-
-def save_to_logfile(dialogue="", audio_file_path=""):
-    now = str(datetime.now()).split(".")[0]
-    with codecs.open('transcribe.log', 'a', encoding='utf-8') as f:
-        # create folder in %appdata% if does not exist
-        appdata_path = os.getenv('APPDATA') + "\\whisper-assistant\\"
-        if not os.path.exists(appdata_path):
-            os.makedirs(appdata_path)
-        # write to appdata folder
-        with codecs.open(appdata_path + 'transcribe.log', 'a', encoding='utf-8') as f:            
-            f.write(now + " : " + dialogue + "\n")
-            if(_debug): 
-                print ("(info) saved to log file: " + now + " : " + dialogue + "\n")
         
 #keyboard events
 pressed = set()
@@ -375,12 +284,14 @@ def record_speech():
     frames = []  # Initialize array to store frames
 
     print("\ntranscription started...")
-    # playsound("on.wav")
-
+    
     while stop_recording==False:
         data = stream.read(chunk) # , always_2d=True) # RB Added always_2d=True. Needed for CUDA? See ref: https://stackoverflow.com/questions/75775272/cuda-and-openai-whisper-enforcing-gpu-instead-of-cpu-not-working
         frames.append(data)
-    
+        #if time.time() - record_start_time > recording_time_limit:
+        #    stop_recording=True
+        #    break
+
     # NOTE (Dec 2023): 
     #   For newer version torch: 2.2.0.dev20231201+cu118 
     #   Attempts to address RuntimeError: expected scalar type Float but found Half ) 
@@ -394,19 +305,22 @@ def record_speech():
     # Stop and close the stream
     stream.stop_stream()
     stream.close()
-    # Terminate the PortAudio interface
     p.terminate()
-    #playsound("off.wav")
     print('processing...')
 
     # Save the recorded data as a WAV file
-    warnings.filterwarnings("ignore")
-    wf = wave.open("test"+str(file_ready_counter+1)+".wav", 'wb')
-    wf.setnchannels(channels)
-    wf.setsampwidth(p.get_sample_size(sample_format))
-    wf.setframerate(fs)
-    wf.writeframes(b''.join(frames))
-    wf.close()
+    try:
+        warnings.filterwarnings("ignore")
+        wf = wave.open("test"+str(file_ready_counter+1)+".wav", 'wb')
+        wf.setnchannels(channels)
+        wf.setsampwidth(p.get_sample_size(sample_format))
+        wf.setframerate(fs)
+        wf.writeframes(b''.join(frames))
+        wf.close()
+    except Exception as e:
+        print(e)
+        print("WAV SAVING ERROR. likey no microphone connected.")
+        return
 
     stop_recording=False
     is_recording=False
@@ -415,35 +329,33 @@ def record_speech():
 
 # Sends messages from the transcription to any listening sockets
 import socket
-def socket_server():
+def socket_server_TX():
     global _transcribed_text_to_send
 
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind(('localhost', 12345))  # Bind to localhost on port 12345
-    server.listen()
-    print("Server listening...")
-    conn, addr = server.accept()
+    while True:
+        try:
+            # Create a TCP/IP socket - happens once or whenever the connection is lost
+            server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            server.bind(('localhost', 12345))
+            server.listen()
+            print("--> Connected to client <--")
 
-    with conn:
-        print('Connected by', addr)
-        while True:
-            # Wait for _transcribed_text_to_send to have data
-            while _transcribed_text_to_send is None:
-                time.sleep(0.1)
+            conn, addr = server.accept()
+            print('Connected by', addr)
 
-            # Send the data
-            conn.sendall(_transcribed_text_to_send.encode())
-            _transcribed_text_to_send = None
+            # while the connection is open, send messages from the transcription
+            with conn:
+                while True:
+                    if _transcribed_text_to_send:
+                        conn.sendall(_transcribed_text_to_send.encode())
+                        _transcribed_text_to_send = None
+                    else:
+                        time.sleep(0.1)
 
-            # Receive acknowledgment, if applicable
-            # ack = conn.recv(1024)
-            # if ack:
-            #    print("Acknowledgment received:", ack.decode())
-
-#------------
-
-# timer_thread = threading.Thread(breaktimer.start_timer(query_gpt_chat("Hey Snoop, tell me in one sentence that it is time for me to take a break (I'm working).", "", playVoice=True)))
-# timer_thread.start()
+        except Exception as e:
+            print(f"Error occurred: {e}")
+            server.close()  # Ensure the server socket is closed before restarting
 
 # clear console
 os.system('cls' if os.name=='nt' else 'clear')
@@ -453,11 +365,35 @@ t2 = threading.Thread(target=transcribe_speech)
 t2.start()
 
 # sends messages from all new transcriptions to any listening sockets
-t3 = threading.Thread(target=socket_server)
+t3 = threading.Thread(target=socket_server_TX)
 t3.start()
 
 
-# hot key events
+# --------------------------------
+# ----- MOUSE hotkey events ------
+# --------------------------------
+from pynput import mouse
+
+def on_click(x, y, button, pressed):
+
+    global stop_recording
+
+    # Side back button hotkey events
+    if button == mouse.Button.x1:
+        if pressed == True and stop_recording==False and is_recording==False:
+            t1 = threading.Thread(target=record_speech)
+            t1.start()
+        elif pressed == False and is_recording==True:
+            stop_recording=True
+            
+# Start the mouse listener
+with mouse.Listener(on_click=on_click) as listener:
+    listener.join()
+
+
+# --------------------------------
+# ---- KEYBOARD hotkey events ----
+# --------------------------------
 def on_press(key):
     pressed.add(key)
 
@@ -486,3 +422,41 @@ def do_record():
 
 with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
     listener.join()
+
+
+
+# NOTE REF: https://github.com/Vaibhavs10/insanely-fast-whisper
+# insanely fast whisper
+# try:
+#     from transformers import pipeline
+#     print(f"Loading {model_name} for insanely-fast-whisper with pipeline...")
+#     pipe = pipeline(
+#         "automatic-speech-recognition",
+#         model="D:\\Data\\LLM-models\\whisper\\whisper-large-v3", # "openai/whisper-medium.en",
+#         torch_dtype=torch.float16,
+#         device="cuda", # or mps for Mac devices
+#         model_kwargs={"use_flash_attention_2": True}, # set to False for old GPUs
+#     )
+# except Exception as e:
+#     print(e)
+#     print(f"\nPipeline error. Loading {model_name} with whisper api instead...")
+#     model = whisper.load_model(model_name).to(device)
+#     print(f"{model_name} model loaded!")
+#print(f"Insanely-fast-whisper done {model_name}!")
+    
+# .....
+
+# insanely fast whisper
+        #elif pipe is not None:
+        #    raw_transcript = pipe("test"+str(i)+".wav", 
+        #        chunk_length_s=30,
+        #        batch_size=24,
+        #        return_timestamps=True)
+#
+        #print('\033[96m' + "\n?RAW TRANSCRIPTION?:\n" + raw_transcript + '\033[0m', file=sys.stderr)
+        #raw_transcript = result["text"].strip()
+        #print('\033[96m' + "\nRAW TRANSCRIPTION:\n" + raw_transcript + '\033[0m', file=sys.stderr)
+        #
+        ## if "computer" or "computer." is the last string, remove it (voice attack)
+        #raw_transcript.strip("computer")
+        #raw_transcript.strip("computer.")

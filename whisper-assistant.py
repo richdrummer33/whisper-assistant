@@ -15,6 +15,7 @@ import torch
 # import OcrWindowsAutomation as winauto
 import pandas as pd
 from pynput import keyboard
+import keyboard as kb
 from playsound import playsound
 from datetime import datetime
 from PyQt5.QtMultimedia import QAudioDeviceInfo
@@ -99,7 +100,6 @@ print(f"Using device: {device}")
 model_name = "small.en"
 print("loading model " + model_name + "...")
 model = whisper.load_model(model_name).to(device)
-playsound("model_loaded.wav")
 print(f"{model_name} model loaded")
 
 # global variables
@@ -308,7 +308,9 @@ def transcribe_speech():
     global file_ready_counter
     global device
     i=1
+    
     print("ready - start transcribing by pressing Alt-M ...\n")
+    playsound("model_loaded.wav")
     
     while True:
         # wait for file to be ready
@@ -322,144 +324,48 @@ def transcribe_speech():
         # transcribe speech
         # with torch.cuda.device(device):
         result = model.transcribe("test"+str(i)+".wav")
-        raw_transcript = result["text"].strip()
-        print('\033[96m' + "\nRAW TRANSCRIPTION:\n" + raw_transcript + '\033[0m', file=sys.stderr)
+        transcript = result["text"].strip()
+
+        # print the transcript
+        print('\033[38;5;155m' + transcript + '\033[0m', file=sys.stderr)
+        # print(, file=sys.stderr)
         
-        # if "computer" or "computer." is the last string, remove it (voice attack)
-        raw_transcript.strip("computer")
-        raw_transcript.strip("computer.")
-        
-        # autocorrect feature
-        corrected_dialogue = raw_transcript
-        
-        # try:
-        #     corrected_dialogue = query_gpt_autocorrect(raw_transcript)
-        #     print('\033[38;5;208m' + "\nCORRECTED TRANSCRIPTION:\n " + corrected_dialogue + '\033[0m', file=sys.stderr)
-        #     _hasKey = True
-        # except:
-        #     pass
-        
-        corrected_dialogue = corrected_dialogue.strip() # remove leading and trailing spaces
-        corrected_dialogue = corrected_dialogue.lstrip(".,:;!?") # removing any leading punctuation and spaces
-        
-        # saves a record of the transcription to a log file to folder in appdata
-        save_to_logfile(corrected_dialogue)
-        
-        # if the 1st word spoken is close to the pseudonym, then run a GPT query and overwrite the result
-        similarity = check_text_similarity((corrected_dialogue.split(" ")[0]).lower, _pseudonym)
-        
+        # strip and clean
+        transcript = transcript.strip() # remove leading and trailing spaces
+        transcript = transcript.lstrip(".,:;!?") # removing any leading punctuation and spaces
+
         # remove all punctuation from the corrected_dialogue for checking if any of the 1st 3 words is the pseudonym (sometimes there is a comma or period before/after the pseudonym)
         translator = str.maketrans('', '', string.punctuation) # Create a translation table that maps every punctuation character to None
-        raw_transcript = corrected_dialogue.translate(translator)
-        firstWords = raw_transcript.lower().strip().split(" ")[:3]
-        isAQuery                = any(word.lower() == _pseudonym.lower() for word in firstWords) or similarity > 80
-        isAnImprovementRequest  = any(word.lower() == _improveKwd.lower() for word in firstWords)
-        if(_debug): 
-            print ("(info) Is a query: " + str(isAQuery) + "\n(info) Has key: " + str(_hasKey))
-            
-        #################################################################
-        ### WE ARE ASKING THE ASSISTANT FOR INSIGHT - RUN A GPT QUERY ###
-        #################################################################
-        if _hasKey and isAnImprovementRequest:
-            # copy to clipboard
-            clipboard_text = get_text_from_clipboard()
-            
-            # if raw text contains the analyze_text_keyword, then run
-            print ("(info) We are asking the assistant to improve text")
-
-            # process the text - runs a GPT rewrite of the copied text
-            improvedText = query_gpt_autocorrect(clipboard_text, True)  # RB: Query GPT and overwrite the result with GPT's response
-            print('\033[95m' + improvedText + '\033[0m', file=sys.stderr)
-
-            # copy the response to the clipboard between the
-            pyperclip.copy(improvedText)
-            
-        elif _hasKey and isAQuery:
-            # save a "before" screenshot for record keeping 
-            screenshot = get_chat_window_screenshot_pysseract()
-            file_number = increment_registry_value("AudioFileIndex")
-            cv2.imwrite("eleven-labs-responses/" + str(file_number) + "_query.png", screenshot)
-            
-            if(_debug): 
-                print ("(info) We are talking to the assistant")
-                
-            # clear the clipboard
-            pyperclip.copy("")
-            clipboard_text = ""
-            ocr_text = ""   
-            
-            # if raw text contains the analyze_text_keyword, then run 
-            # if the raw_transcript has the analyze_text_keyword, then run 
-            # do window OCR for wider context
-            # ocr_text = get_window_text_ocr_pysseract()
-            
-            # process the text - runs a GPT autocorrect
-            clipboard_text = "\n" + get_text_from_clipboard()
-            
-            feedback = ""
-            if(clipboard_text != ""):
-                feedback = "Asking " + _pseudonym + " about: " + clipboard_text
-                
-            print(feedback, file=sys.stderr)
-            corrected_dialogue = query_gpt_chat(corrected_dialogue + clipboard_text, ocr_text)  # RB: Query GPT and overwrite the result with GPT's response
-            print('\033[95m' + "\n" + _pseudonym + " says:\n" + corrected_dialogue + '\033[0m', file=sys.stderr)
-            
-            # copy the response to the clipboard between the 
-            pyperclip.copy(corrected_dialogue)
-        
-            # get the index from the registry
-            file_number = get_registry_value("AudioFileIndex")
-            # save the audio to a file
-            shutil.copyfile("test"+str(i)+".wav", "eleven-labs-responses/" + str(file_number) + "_ours.wav")
-
-            # speech synthesis eleven labs
-            play_voice(corrected_dialogue)
+        transcript = transcript.translate(translator)
             
         ##################################################################
         ####### REGULAR SPEECH-TO-TEXT TRANSCRIPTION (AUTO-TYPING) #######
         ##################################################################
-        else: 
-            if(_debug):
-                print ("(info) Transcribing speech. No GPT query.")
-            
-            # remove leading + trailing spaces and leading punctuation 
-            corrected_dialogue = corrected_dialogue.strip() 
-            corrected_dialogue = corrected_dialogue.lstrip(".,:;!?")    
+        if(_debug):
+            print ("(info) Transcribing speech. No GPT query.")
+        
+        # if starts with 'git' then remove trailing period if it exists
+        if(transcript.lower().startswith("git")):   
+            print ("[git command]")
+            transcript = transcript.rstrip(".")
 
-            # GPT query to correct the text
-            # corrected_dialogue = query_gpt_autocorrect(corrected_dialogue, True)
-            print('\033[95m' + "\n" + _pseudonym + " says:\n" + corrected_dialogue + '\033[0m', file=sys.stderr)
-
-            # if starts with 'git' then remove trailing period if it exists
-            if(corrected_dialogue.lower().startswith("git")):   
-                print ("[git command]")
-                corrected_dialogue = corrected_dialogue.rstrip(".")
-            # if is not a full sentence, then remove any trailing periods
-            if(len(corrected_dialogue) < 25):
-                corrected_dialogue = corrected_dialogue.rstrip(".")
-            
-            for char in corrected_dialogue:
-                try:
-                    pykeyboard.type(char)
-                    time.sleep(0.01)
-                except Exception as e:
-                    print("empty or unknown symbol" + e)    
+        # if is not a full sentence, then remove any trailing periods
+        if(len(transcript) < 25):
+            transcript = transcript.rstrip(".")
+        
+        for char in transcript:
+            try:
+                # Cancel hotkey 
+                if kb.is_pressed('alt') and kb.is_pressed('w'): break
+                # type it out!
+                pykeyboard.type(char)
+                time.sleep(0.01)
+            except Exception as e:
+                print("empty or unknown symbol" + e)    
                     
         os.remove("test"+str(i)+".wav")
         i=i+1
 
-def save_to_logfile(dialogue="", audio_file_path=""):
-    now = str(datetime.now()).split(".")[0]
-    with codecs.open('transcribe.log', 'a', encoding='utf-8') as f:
-        # create folder in %appdata% if does not exist
-        appdata_path = os.getenv('APPDATA') + "\\whisper-assistant\\"
-        if not os.path.exists(appdata_path):
-            os.makedirs(appdata_path)
-        # write to appdata folder
-        with codecs.open(appdata_path + 'transcribe.log', 'a', encoding='utf-8') as f:            
-            f.write(now + " : " + dialogue + "\n")
-            if(_debug): 
-                print ("(info) saved to log file: " + now + " : " + dialogue + "\n")
         
 import numpy as np
 import pygetwindow as gw
@@ -761,59 +667,92 @@ def get_max_channels():
     print("Max channels:", max_channels)
     return max_channels
 
-#record audio
-def record_speech():
+# PLAY SOUND for final N seconds of recording, e.g. 3 seconds (defined in async_record_speech function)
+do_countdown_beep = False
+def async_recorder_timeout_beeper():
+    global do_countdown_beep 
+
+    if do_countdown_beep:
+        playsound("beep.wav")
+        do_countdown_beep = False
+
+
+# RECORD AUDIO
+def async_record_speech():
     global file_ready_counter
     global stop_recording
     global is_recording
+    global do_countdown_beep
 
+    # Set rec flag
     is_recording=True
-    chunk = 1024  # Record in chunks of 1024 samplesSure, I'll do my best to rectify any inaccuracies and make necessary grammatical corrections. Please provide me with the text that needs refinement.
+    
+    # Set recording settings
     sample_format = pyaudio.paInt16  # 16 bits per sample
-    #channels = 2
-    # get info with get_default_input_device_info()["maxInputChannels"]
     channels = 1 # get_max_channels()
+    frames = []  # Initialize array to store frames
+    chunk = 1024  # Record in chunks of 1024 samplesSure, I'll do my best to rectify any inaccuracies and make necessary grammatical corrections. Please provide me with the text that needs refinement.
     fs = 44100  # Record at 44100 samples per second
+
+    # Open the mic input stream
     p = pyaudio.PyAudio()  # Create an interface to PortAudio
     try:
-        stream = p.open(format=sample_format,
-                    channels=channels,
-                    rate=fs,
-                    frames_per_buffer=chunk,
-                    input=True)
+        stream = p.open (
+                format=sample_format,
+                channels=channels,
+                rate=fs,
+                frames_per_buffer=chunk,
+                input=True
+            )
     except Exception as e:
         print(e + "\n\nIt's likey that no microphone is connected. ")
         return
     
-    frames = []  # Initialize array to store frames
-
-    print("\ntranscription started...")
+    print("\nRecording...")
     playsound("on.wav")
 
-    while stop_recording==False:
+    # Params to limit recording duration to prevent lockups
+    max_duration = 40                           # duration your allowed to record
+    tick_counter = 3                            # for the last "tick_counter" seconds, beep every second
+    start_time = time.time()                    # get current time
+    rec_time_limit = start_time + max_duration    # time limit for recording
+
+    # Record audio stream!
+    while stop_recording==False and time.time() < rec_time_limit:
+        # Read chunk and load it into numpy array
         data = stream.read(chunk) # , always_2d=True) # RB Added always_2d=True. Needed for CUDA? See ref: https://stackoverflow.com/questions/75775272/cuda-and-openai-whisper-enforcing-gpu-instead-of-cpu-not-working
         frames.append(data)
+        
+        # beep every second for the last "tick_counter" seconds (played via async_record_speech function)
+        time_remaining = rec_time_limit - time.time()
+        if (time_remaining < tick_counter and tick_counter > 0):
+            tick_counter -= 1           # decrement the tick counter
+            do_countdown_beep = True    # async_record_speech will play the beep!
 
     # Stop and close the stream
     stream.stop_stream()
     stream.close()
+
     # Terminate the PortAudio interface
     p.terminate()
     playsound("off.wav")
+    
     print('processing...')
 
-    # Save the recorded data as a WAV file
-    warnings.filterwarnings("ignore")
-    wf = wave.open("test"+str(file_ready_counter+1)+".wav", 'wb')
-    wf.setnchannels(channels)
-    wf.setsampwidth(p.get_sample_size(sample_format))
-    wf.setframerate(fs)
-    wf.writeframes(b''.join(frames))
-    wf.close()
+    # If user stopped rec within the time-limit, save the file
+    if time.time() < rec_time_limit:
+        warnings.filterwarnings("ignore") # this is to suppress the warning: "WavFileWarning: Chunk (non-data) not understood, skipping it."
+        wf = wave.open("test"+str(file_ready_counter+1)+".wav", 'wb') # OPEN the wav file
+        wf.setnchannels(channels) # set channels to "channels" means that it will be the same as the input
+        wf.setsampwidth(p.get_sample_size(sample_format)) # set sample width to the same as the input
+        wf.setframerate(fs) # set framerate to the same as the input
+        wf.writeframes(b''.join(frames)) # write the frames to the file
+        wf.close() # CLOSE the wav file
+        file_ready_counter=file_ready_counter+1 # increment the counter for the file name
 
+    # Reset flags
     stop_recording=False
     is_recording=False
-    file_ready_counter=file_ready_counter+1
 
 #------------
 
@@ -825,6 +764,9 @@ initial_setup_check()
 # transcribe speech in infinte loop
 t2 = threading.Thread(target=transcribe_speech)
 t2.start()
+
+t3 = threading.Thread(target=async_recorder_timeout_beeper)
+t3.start()
 
 # hot key events
 def on_press(key):
@@ -847,7 +789,7 @@ def do_record():
         for keys in c["keys"]:
             if keys.issubset(pressed):
                 if c["command"]=="start record" and stop_recording==False and is_recording==False:
-                    t1 = threading.Thread(target=record_speech)
+                    t1 = threading.Thread(target=async_record_speech)
                     t1.start()
                 else:
                     if c["command"]=="start record" and is_recording==True:
