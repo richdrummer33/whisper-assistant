@@ -1,14 +1,10 @@
 # whisper-assistant
 
-Types what you say, emulating keystrokes. This is my primary way of typing. Works like a charm.
+This is a python script using [openai/whisper](https://github.com/openai/whisper) to type with your voice. It simply types what you say, emulating keystrokes. This is my primary way of typing. Works like a charm.
 
-DEPRECATED FEATURE (but can be re-included in code):
-This is a python script using [openai/whisper](https://github.com/openai/whisper) to type with your voice.
-After you start the script you just press **F2** to start/stop recording. After the record is finsihed, it will type what you said starting at the current cursor position in any editor,input field etc.
+# DEPRECATED
 
-# FYI
-
-I have made the assistant snoop dogg. You can change the prompt to be whomever you like, and give it personality as you like (or lack thereof).
+It includes features for an AI assistant, with voice. The defaults are Snoop Dogg and Mr Bean (I can claim I was first to make a Snoop assistant lol). You can change the prompt to be whomever you like, and give it personality as you like (or lack thereof).
 
 # Setup Instructions
 
