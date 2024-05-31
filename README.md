@@ -1,5 +1,8 @@
 # whisper-assistant
 
+Types what you say, emulating keystrokes. This is my primary way of typing. Works like a charm.
+
+DEPRECATED FEATURE (but can be re-included in code):
 This is a python script using [openai/whisper](https://github.com/openai/whisper) to type with your voice.
 After you start the script you just press **F2** to start/stop recording. After the record is finsihed, it will type what you said starting at the current cursor position in any editor,input field etc.
 
