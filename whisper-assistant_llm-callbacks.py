@@ -10,6 +10,7 @@ import winreg
 import os
 import sys
 import string
+import win32api, win32process, win32con # FOR SETTING APP PRIORITY TO PREVENT UNRESPONSIVE BEHAVIORS
 from pynput import keyboard
 from datetime import datetime
 from PyQt5.QtMultimedia import QAudioDeviceInfo
@@ -96,8 +97,6 @@ from playsound import playsound
 # • Cave Johnson's assistant's assistant
 # • Cave Johnson's assistant's assistant's assistant
 
-
-
 #################
 
 # import json
@@ -114,6 +113,11 @@ from playsound import playsound
 # AutoModel.register(config_params, model)
 
 #################
+
+# Set process priority
+pid = win32api.GetCurrentProcessId()
+handle = win32api.OpenProcess(win32con.PROCESS_ALL_ACCESS, True, pid)
+win32process.SetPriorityClass(handle, win32process.HIGH_PRIORITY_CLASS)
 
 model_name = "small.en"
 model = None

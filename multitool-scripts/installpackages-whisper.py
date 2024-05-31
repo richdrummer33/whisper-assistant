@@ -1,6 +1,11 @@
 import subprocess
 import sys
 
+# HOW TO USE:
+#   1. run script in any conda environment
+#   2. pick the py script you want to install packages for
+#   3. let it run!
+
 # Function to install packages using pip
 def install(package):
     installed = True

@@ -18,6 +18,8 @@ import warnings
 import numpy as np
 import pandas as pd
 import keyboard as kb
+import speech_recognition as sr
+import win32api, win32process, win32con # FOR SETTING APP PRIORITY TO PREVENT UNRESPONSIVE BEHAVIORS
 from pynput import keyboard
 from playsound import playsound
 from datetime import datetime
@@ -92,19 +94,33 @@ from elevenlabslib import helpers
 # • Cave Johnson's assistant's assistant
 # • Cave Johnson's assistant's assistant's assistant
 
+# Set process priority
+pid = win32api.GetCurrentProcessId()
+handle = win32api.OpenProcess(win32con.PROCESS_ALL_ACCESS, True, pid)
+win32process.SetPriorityClass(handle, win32process.HIGH_PRIORITY_CLASS)
+
 # GPU CUDA for whisper
 # device = "cuda" if torch.cuda.is_available() else "cpu"
-device = "cuda"
-if device == "cuda":
-    torch.cuda.init()
-print(f"Using device: {device}")
+
+# thread for loading model
 
 # model loading 
-model_name = "small.en"
-print("loading model " + model_name + "...")
-model = whisper.load_model(model_name).to(device)
-print(f"{model_name} model loaded")
+# thread for loading model
+model = None
+def load_model_thread():
+    global model
 
+    device = "cuda"
+    if device == "cuda":
+        torch.cuda.init()
+    print(f"Using device: {device}")
+
+    model_name = "small.en"
+    print("loading model " + model_name + "...", file=sys.stderr)
+    model = whisper.load_model(model_name).to(device)
+    # clear the console
+    os.system('cls' if os.name == 'nt' else 'clear')
+    
 # global variables
 _fullName = "Mr Bean"
 _pseudonym = "bean"  # RB: Pseudonym to be used for the assistant
@@ -217,8 +233,8 @@ def initial_setup_check():
         _hasKey = is_api_key_valid()
         if _hasKey:
             os.system('cls' if os.name == 'nt' else 'clear')
-            print("\nOpenAI GPT API key and organization ID found.", file=sys.stderr)
     except:
+        print("\nOpenAI GPT API key and organization ID NOT FOUND!", file=sys.stderr)
         _hasKey = False
     
     # if the folder eleven-labs-responses does not exist, then create it
@@ -284,6 +300,12 @@ def transcribe_speech():
     global file_ready_counter
     global device
     i=1
+
+    print("Awaiting model loading...", file=sys.stderr)
+
+    # await async model loading
+    while model == None:
+        time.sleep(0.1)
     
     print("ready - start transcribing by pressing Alt-M ...\n")
     playsound("model_loaded.wav")
@@ -293,12 +315,9 @@ def transcribe_speech():
         while file_ready_counter < i:
             time.sleep(0.01)
         
-        # define openai api key and organization
-        openai.organization = os.getenv("OPENAI_ORG")
-        openai.api_key = os.getenv("OPENAI_API_KEY")
-        
         # transcribe speech
         # with torch.cuda.device(device):
+        print('processing...')
         result = model.transcribe("test"+str(i)+".wav")
         transcript = result["text"].strip()
 
@@ -308,12 +327,7 @@ def transcribe_speech():
         
         # strip and clean
         transcript = transcript.strip() # remove leading and trailing spaces
-        transcript = transcript.lstrip(".,:;!?") # removing any leading punctuation and spaces
 
-        # remove all punctuation from the corrected_dialogue for checking if any of the 1st 3 words is the pseudonym (sometimes there is a comma or period before/after the pseudonym)
-        translator = str.maketrans('', '', string.punctuation) # Create a translation table that maps every punctuation character to None
-        transcript = transcript.translate(translator)
-        
         # IF GIT COMMAND: Remove trailing period if starts with 'git'
         if(transcript.lower().startswith("git")):   
             print ("[git command]")
@@ -332,7 +346,7 @@ def transcribe_speech():
 
                 # Keystroke
                 pykeyboard.type(char)
-                time.sleep(0.01)
+                time.sleep(0.0075)
                 
             except Exception as e:
                 print("empty or unknown symbol" + e)    
@@ -342,7 +356,7 @@ def transcribe_speech():
         os.remove("test"+str(i)+".wav")
         i=i+1
 
-#########################################################
+######################################################### 
 ##################### Extra features ####################
 #########################################################
 #region EXTRAS
@@ -534,8 +548,8 @@ def query_gpt_chat(query="", windowText = "", playVoice = False):
     }
     response = openai.ChatCompletion.create(**parameters)
     
-    if playVoice:
-        play_voice(response.choices[0].message.content)
+    # if playVoice:
+    #     play_voice(response.choices[0].message.content)
     
     return response.choices[0].message.content
 
@@ -637,6 +651,7 @@ do_countdown_beep = False
 def async_recorder_timeout_beeper():
     playsound("beep.wav")
 
+
 # RECORD AUDIO
 def async_record_speech():
     global file_ready_counter
@@ -668,26 +683,78 @@ def async_record_speech():
         print(e + "\n\nIt's likey that no microphone is connected. ")
         return
     
+    # Limit recording duration to prevent lockups
+    max_duration = 100
+    start_time = time.time()                    # get current time
+    rec_time_limit = start_time + max_duration  # time limit for recording
+
+    # for timeout sfx
+    num_ticks = 3                            
+    tick_count = num_ticks                      # for the last "tick_counter" seconds, beep every second
+    ticks_ct = 0                                 # used as a flag to prevent the beep from playing again until the final tick_counter seconds     
+
+    # no-talk detection
+    # a) voice level
+    voice_level_threshold = np.sqrt(np.mean(np.frombuffer(stream.read(chunk), dtype=np.int16)**2)) * 2
+    # b) timer
+    check_quiet_period = 1
+    quiet_time_limit = 60
+    quiet_grace_period = 5                            # num seconds to wait for voice input before resetting the the record timer
+    last_voice_detected_time = start_time + check_quiet_period
+    quiet_timer_expired = False
+
+
+    # Start-stream notification!
     print("\nRecording...")
     playsound("on.wav")
 
-    # Params to limit recording duration to prevent lockups
-    max_duration = 60                           # duration your allowed to record
-    tick_counter = 3                            # for the last "tick_counter" seconds, beep every second
-    start_time = time.time()                    # get current time
-    rec_time_limit = start_time + max_duration    # time limit for recording
-
     # Record audio stream!
-    while stop_recording==False and time.time() < rec_time_limit:
-        # Read chunk and load it into numpy array
-        data = stream.read(chunk) # , always_2d=True) # RB Added always_2d=True. Needed for CUDA? See ref: https://stackoverflow.com/questions/75775272/cuda-and-openai-whisper-enforcing-gpu-instead-of-cpu-not-working
-        frames.append(data)
+    cur_time = time.time()
+    voice_level = 0
+    while stop_recording==False and cur_time < rec_time_limit:
         
+        # round time to nearest second
+        cur_time = time.time()
+
+        # Read chunk and load it into numpy array
+        data = stream.read(chunk)
+        frames.append(data)
+
+        # Check if:
+        # 1) voice is detected and reset no-talk timer if so, else 
+        # 2) check if no-talk timer has expired and stop recording if so
+        if cur_time > last_voice_detected_time + check_quiet_period:
+            np_data = np.frombuffer(data, dtype=np.int16)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+                voice_level = np.sqrt(np.mean(np_data**2))
+            # 1) If voice IS detected, then reset the no-talk timer
+            # !Extend the recording time limit cause we talked - and the aim is justto mitigate long gaps in speech (not simply long files)
+            if voice_level > voice_level_threshold:
+                last_voice_detected_time = cur_time
+                rec_time_limit = cur_time + max_duration  # extend the recording time limit
+                tick_count = num_ticks                    # reset the tick counter
+                quiet_timer_expired = False
+            # 2) If voice IS NOT detected, then check if the no-talk timer has expired
+            # !Clamp the recording time limit to the "no_talk_limit" to prevent long gaps in speech
+            elif cur_time > last_voice_detected_time + quiet_time_limit and quiet_timer_expired == False:
+                rec_time_limit = cur_time + quiet_grace_period + 0.1 # Allow the user to interject for a little while
+                quiet_timer_expired = True
+
         # beep every second for the last "tick_counter" seconds (played via async_record_speech function)
-        time_remaining = rec_time_limit - time.time()
-        if (time_remaining < tick_counter and tick_counter > 0):
+        time_remaining = rec_time_limit - cur_time
+        # if the beep_ct is 0 and we surpassed 75% of teh time limit, then play the beep
+        if (time_remaining < max_duration * 0.75 and ticks_ct == 0):
+            # print info
+            print("Time warning: " + str(time_remaining))
             play_beep_async()
-            tick_counter -= 1           # decrement the tick counter
+            ticks_ct += 1                # used as a flag to prevent the beep from playing again until the final tick_counter seconds
+        elif (time_remaining < tick_count and tick_count > 0):
+            # print info
+            print("Time ticker: " + str(time_remaining))
+            play_beep_async()
+            ticks_ct += 1                # not really necessary, but just in case we want to do something with it later
+            tick_count -= 1           # decrement the tick counter
             do_countdown_beep = True    # async_record_speech will play the beep!
 
     # Stop and close the stream
@@ -696,12 +763,8 @@ def async_record_speech():
 
     # Terminate the PortAudio interface
     p.terminate()
-    playsound("off.wav")
-    
-    print('processing...')
 
-    # If user stopped rec within the time-limit, save the file
-    if time.time() < rec_time_limit:
+    if time.time() < rec_time_limit - 0.1:
         warnings.filterwarnings("ignore") # this is to suppress the warning: "WavFileWarning: Chunk (non-data) not understood, skipping it."
         wf = wave.open("test"+str(file_ready_counter+1)+".wav", 'wb') # OPEN the wav file
         wf.setnchannels(channels) # set channels to "channels" means that it will be the same as the input
@@ -709,7 +772,10 @@ def async_record_speech():
         wf.setframerate(fs) # set framerate to the same as the input
         wf.writeframes(b''.join(frames)) # write the frames to the file
         wf.close() # CLOSE the wav file
-        file_ready_counter=file_ready_counter+1 # increment the counter for the file name
+        file_ready_counter=file_ready_counter + 1 # increment the counter for the file name
+        playsound("off.wav")
+    else:
+        playsound("error.wav")
 
     # Reset flags
     stop_recording=False
@@ -727,6 +793,10 @@ initial_setup_check()
 # transcribe speech in infinte loop
 t2 = threading.Thread(target=transcribe_speech)
 t2.start()
+
+# Call the load_model_thread function in a separate thread
+tload = threading.Thread(target=load_model_thread)
+tload.start()
 
 # hot key events
 def on_press(key):
