@@ -1,5 +1,11 @@
-ffmpeg.exe
-*test*.wav
-eleven-labs-responses/
-*.log
-test/
+# Git ignore file for a C++ project
+*.txt
+*.venv/
+*test/
+*small.en/
+*open_source_llm/
+*Old 💿/
+*flash_attn.egg-info/
+*eleven-labs-responses/
+*__pycache__/
+*ffmpeg.exe

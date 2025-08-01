@@ -1,12 +1,22 @@
-numba
-numpy
-torch
-tqdm
-more-itertools
-tiktoken
+openai-whisper
 pynput
 pyaudio
-wave
+pygame
+pywin32
+librosa
+Pillow
+pyperclip
+psutil
+keyboard
+pyfiglet
+clipboardhist
+pydub
 openai
-openai-whisper
-PyQt5
+setuptools-rust
+numpy
+soundfile
+torch
+transformers
+faster-whisper
+datasets[audio]      	# for faster-whisper
+accelerate           	# for faster-whisper
