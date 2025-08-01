@@ -15,4 +15,4 @@ Simple keystrokes to voice-transcribe or set reminder
 *Untested on Mac or Linux*
 
 ### Step 2 — Install / Run!
-Install & run with `_Launch Whisper Typer & Reminder Tool 💾🗣️_.bat`!
+Install & launch with `_Launch Whisper Typer & Reminder Tool 💾🗣️_.bat`!
