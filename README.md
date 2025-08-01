@@ -9,8 +9,7 @@ Simple keystrokes to voice-transcribe or set reminder
 
 ### Step 1 — Install ffmpeg (Windows)
 - Download ffmpeg from https://ffmpeg.org/ , unpack it and paste "ffmpeg.exe" into the project folder (cloned/downloaded)
-- Download and Install git from https://git-scm.com/download/win
-- Download and Install python3 from https://www.python.org/downloads/windows/
+- Download and Install python3 from https://www.python.org/downloads/windows/ if you don't yet have it
     
 *Untested on Mac or Linux*
 
