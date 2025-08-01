@@ -4,12 +4,12 @@ After you start the script you just press **F2** to start/stop recording. After 
 
 # Setup Instructions
 
-## Step 1 — Install ffmpeg (Windows)
+### Step 1 — Install ffmpeg (Windows)
 - Download ffmpeg from https://ffmpeg.org/ , unpack it and paste "ffmpeg.exe" in this folder
 - Download and Install git from https://git-scm.com/download/win
 - Download and Install python3 from https://www.python.org/downloads/windows/
     
 *Untested on Mac or Linux*
 
-## Step 2 — Install / Run!
+### Step 2 — Install / Run!
 Install & run with `_Launch Whisper Typer & Reminder Tool 💾🗣️_.bat`!
