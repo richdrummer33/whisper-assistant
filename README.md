@@ -1,6 +1,9 @@
 # whisper-typer-tool
-This is a python script using [openai/whisper](https://github.com/openai/whisper) to type with your voice.
-After you start the script you just press **F2** to start/stop recording. After the record is finsihed, it will type what you said starting at the current cursor position in any editor,input field etc.
+This is a python script using [openai/whisper](https://github.com/openai/whisper) to 
+1. Type with your voice.
+2. Set reminders with natural speech/language (uses OpenAI, and requires an API key — instructions in terminal upon launch)
+
+Simple keystrokes to voice-transcribe or set reminder 
 
 # Setup Instructions
 
